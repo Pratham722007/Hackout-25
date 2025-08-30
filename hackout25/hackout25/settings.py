@@ -121,6 +121,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
     BASE_DIR / 'authentication' / 'static',
@@ -143,10 +144,8 @@ TEMPLATES[0]['DIRS'] = [
     BASE_DIR / 'dashboard' / 'templates',
     BASE_DIR / 'heatmap' / 'templates',
     BASE_DIR / 'achievements' / 'templates',
+    BASE_DIR / 'news' / 'templates',
 ]
-
-# Template directory
-TEMPLATES[0]['DIRS'] = [BASE_DIR / 'authentication' / 'templates']
 
 # Caching configuration for better performance
 CACHES = {

@@ -1,0 +1,178 @@
+/* New Analysis Form Styles */
+
+/* Upload Section */
+.upload-section {
+    border: 2px dashed #dee2e6;
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    background-color: #fafbfc;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.upload-section:hover {
+    border-color: var(--primary-color);
+    background-color: #f0f9f7;
+}
+
+.upload-section.dragover {
+    border-color: var(--primary-color);
+    background-color: #e8f5f0;
+}
+
+/* Upload Icon */
+.upload-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.upload-icon i {
+    color: white;
+    font-size: 2rem;
+}
+
+/* Upload Buttons */
+.upload-buttons {
+    margin-top: 20px;
+}
+
+.upload-buttons .btn {
+    min-width: 120px;
+}
+
+/* Hide file input */
+.file-input-hidden,
+#id_image {
+    display: none;
+}
+
+/* Form Controls */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #e1e8ed;
+    padding: 12px 16px;
+    font-size: 14px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(22, 160, 133, 0.25);
+}
+
+/* Form Labels */
+.form-label {
+    font-weight: 600;
+    color: var(--dark-text);
+    margin-bottom: 8px;
+}
+
+/* Form Text */
+.form-text {
+    font-size: 0.875rem;
+    color: var(--muted-text);
+}
+
+/* Image Preview */
+.image-preview {
+    margin-top: 1rem;
+}
+
+.image-preview .card {
+    border: 1px solid #e3e6f0;
+    border-radius: 8px;
+}
+
+.image-preview .card-body {
+    padding: 1rem;
+}
+
+.preview-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Submit Button */
+.submit-button {
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.submit-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Description Textarea */
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Error Messages */
+.text-danger {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Success Messages */
+.text-success {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* File Upload Animations */
+.upload-content {
+    transition: opacity 0.3s ease;
+}
+
+.upload-section.processing .upload-content {
+    opacity: 0.7;
+}
+
+/* Progress Indicators */
+.upload-progress {
+    margin-top: 1rem;
+}
+
+.progress {
+    height: 6px;
+    border-radius: 3px;
+    background-color: #f8f9fa;
+}
+
+.progress-bar {
+    border-radius: 3px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .upload-section {
+        padding: 30px 15px;
+    }
+    
+    .upload-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .upload-icon i {
+        font-size: 1.5rem;
+    }
+    
+    .upload-buttons .btn {
+        min-width: auto;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}

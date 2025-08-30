@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Count, Avg
 from .models import EnvironmentalAnalysis, Alert
 from .forms import EnvironmentalAnalysisForm
 from .ai_model import environmental_analyzer
@@ -16,20 +16,55 @@ import json
 import threading
 
 def dashboard_view(request):
-    from django.db.models import Count, Q
     
     # Get recent analyses with single query, including user information
-    analyses = EnvironmentalAnalysis.objects.select_related('created_by').order_by('-created_at')[:10]
+    # For dashboard, filter by current user's reports only
+    if request.user.is_authenticated:
+        analyses = EnvironmentalAnalysis.objects.select_related('created_by').filter(created_by=request.user).order_by('-created_at')[:10]
+    else:
+        # For unauthenticated users, show no reports or all reports (depending on your preference)
+        analyses = EnvironmentalAnalysis.objects.none()
     
-    # Get stats with optimized queries
-    stats = EnvironmentalAnalysis.get_stats()
-    
-    # Risk distribution for pie chart - single query with aggregation
-    risk_distribution_data = EnvironmentalAnalysis.objects.aggregate(
-        critical=Count('id', filter=Q(risk_level='critical')),
-        high=Count('id', filter=Q(risk_level='high')),
-        low=Count('id', filter=Q(risk_level='low'))
-    )
+    # Get stats with optimized queries - user-specific for dashboard
+    if request.user.is_authenticated:
+        # Get user-specific stats
+        user_reports = EnvironmentalAnalysis.objects.filter(created_by=request.user)
+        stats_data = user_reports.aggregate(
+            total=Count('id'),
+            completed=Count('id', filter=Q(status='completed')),
+            flagged=Count('id', filter=Q(status='flagged')),
+            avg_confidence=Count('id')  # We'll calculate this separately to handle nulls
+        )
+        
+        # Calculate average confidence manually to handle edge cases
+        confidence_avg = user_reports.aggregate(avg_confidence=Avg('confidence'))['avg_confidence']
+        
+        stats = {
+            'total': stats_data['total'] or 0,
+            'completed': stats_data['completed'] or 0,
+            'flagged': stats_data['flagged'] or 0,
+            'avg_confidence': int(confidence_avg or 0)
+        }
+        
+        # Risk distribution for pie chart - user-specific
+        risk_distribution_data = user_reports.aggregate(
+            critical=Count('id', filter=Q(risk_level='critical')),
+            high=Count('id', filter=Q(risk_level='high')),
+            low=Count('id', filter=Q(risk_level='low'))
+        )
+    else:
+        # For unauthenticated users, show zero stats
+        stats = {
+            'total': 0,
+            'completed': 0,
+            'flagged': 0,
+            'avg_confidence': 0
+        }
+        risk_distribution_data = {
+            'critical': 0,
+            'high': 0,
+            'low': 0
+        }
     risk_distribution = {
         'critical': risk_distribution_data['critical'],
         'high': risk_distribution_data['high'],
