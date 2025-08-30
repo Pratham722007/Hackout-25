@@ -1,22 +1,39 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from .models import EnvironmentalAnalysis
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
+from django.core.paginator import Paginator
+from django.db.models import Q
+from .models import EnvironmentalAnalysis, Alert
 from .forms import EnvironmentalAnalysisForm
 from .ai_model import environmental_analyzer
 from .geocoding import geocoding_service
+from .services.email_service import AlertEmailService
 import re
 import os
 import json
+import threading
 
 def dashboard_view(request):
-    analyses = EnvironmentalAnalysis.objects.all()[:10]  # Recent 10 analyses
+    from django.db.models import Count, Q
+    
+    # Get recent analyses with single query
+    analyses = EnvironmentalAnalysis.objects.select_related().order_by('-created_at')[:10]
+    
+    # Get stats with optimized queries
     stats = EnvironmentalAnalysis.get_stats()
     
-    # Risk distribution for pie chart
+    # Risk distribution for pie chart - single query with aggregation
+    risk_distribution_data = EnvironmentalAnalysis.objects.aggregate(
+        critical=Count('id', filter=Q(risk_level='critical')),
+        high=Count('id', filter=Q(risk_level='high')),
+        low=Count('id', filter=Q(risk_level='low'))
+    )
     risk_distribution = {
-        'critical': EnvironmentalAnalysis.objects.filter(risk_level='critical').count(),
-        'high': EnvironmentalAnalysis.objects.filter(risk_level='high').count(),
-        'low': EnvironmentalAnalysis.objects.filter(risk_level='low').count(),
+        'critical': risk_distribution_data['critical'],
+        'high': risk_distribution_data['high'],
+        'low': risk_distribution_data['low'],
     }
     
     context = {
@@ -82,6 +99,67 @@ def new_analysis_view(request):
                 analysis.confidence = calculate_confidence(analysis.title, analysis.location)
             
             analysis.save()
+            
+            # Automatically create alert for high risk or critical reports
+            if analysis.risk_level in ['high', 'critical']:
+                try:
+                    # Get or create system user for auto-generated alerts
+                    system_user, created = User.objects.get_or_create(
+                        username='system_auto',
+                        defaults={
+                            'email': 'system@ecovalidate.com',
+                            'first_name': 'System',
+                            'last_name': 'Auto-Alert'
+                        }
+                    )
+                    
+                    # Determine alert priority based on risk level
+                    alert_priority = 'critical' if analysis.risk_level == 'critical' else 'high'
+                    
+                    # Create alert with report details
+                    alert_title = f"🚨 {analysis.risk_level.upper()} RISK: {analysis.title}"
+                    alert_description = f"""
+AUTO-GENERATED ALERT FROM NEW ENVIRONMENTAL REPORT
+
+📍 Location: {analysis.location}
+🎯 Risk Level: {analysis.risk_level.upper()}
+📊 AI Confidence: {analysis.confidence}%
+📅 Reported: {analysis.created_at.strftime('%Y-%m-%d %H:%M UTC')}
+
+📝 Description:
+{analysis.description if analysis.description else 'No additional description provided.'}
+
+⚠️ This alert was automatically generated based on AI analysis of a new environmental report. Immediate attention may be required.
+                    """
+                    
+                    # Create the alert
+                    alert = Alert.objects.create(
+                        title=alert_title,
+                        description=alert_description,
+                        location=analysis.location,
+                        priority=alert_priority,
+                        image=analysis.image,
+                        created_by=system_user
+                    )
+                    
+                    # Send alert emails in background
+                    def send_auto_alert_emails():
+                        try:
+                            success_count, total_count = AlertEmailService.send_alert_to_all_users(alert)
+                            print(f"Auto-alert sent to {success_count}/{total_count} users for report: {analysis.title}")
+                        except Exception as e:
+                            print(f"Error sending auto-alert emails: {e}")
+                    
+                    # Start email sending in background
+                    email_thread = threading.Thread(target=send_auto_alert_emails)
+                    email_thread.daemon = True
+                    email_thread.start()
+                    
+                    print(f"Auto-generated alert created for {analysis.risk_level} risk report: {analysis.title}")
+                    
+                except Exception as e:
+                    print(f"Error creating auto-alert for report {analysis.title}: {e}")
+            
             return redirect('dashboard')
     else:
         form = EnvironmentalAnalysisForm()
@@ -149,10 +227,15 @@ def calculate_confidence(title, location):
 
 def get_coordinates(request):
     """AJAX view to get coordinates for a location"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     if request.method == 'GET':
         location = request.GET.get('location', '').strip()
+        logger.info(f"Coordinate lookup request for location: '{location}'")
         
         if not location:
+            logger.warning("Coordinate lookup request with empty location")
             return JsonResponse({
                 'success': False,
                 'error': 'Location parameter is required'
@@ -160,9 +243,11 @@ def get_coordinates(request):
         
         try:
             # Get coordinates from geocoding service
+            logger.info(f"Calling geocoding service for: {location}")
             result = geocoding_service.get_coordinates(location)
             
             if result:
+                logger.info(f"Geocoding successful for '{location}': {result['latitude']:.6f}, {result['longitude']:.6f}")
                 return JsonResponse({
                     'success': True,
                     'latitude': result['latitude'],
@@ -171,18 +256,159 @@ def get_coordinates(request):
                     'coordinates_text': f"{result['latitude']:.6f}, {result['longitude']:.6f}"
                 })
             else:
+                logger.warning(f"No coordinates found for location: '{location}'")
                 return JsonResponse({
                     'success': False,
                     'error': 'Location not found. Please check the spelling or try a more specific location.'
                 })
                 
         except Exception as e:
+            logger.error(f"Error in coordinate lookup for '{location}': {str(e)}")
             return JsonResponse({
                 'success': False,
                 'error': f'Error retrieving coordinates: {str(e)}'
             })
     
+    logger.warning(f"Invalid request method for coordinate lookup: {request.method}")
     return JsonResponse({
         'success': False,
         'error': 'Invalid request method'
     })
+
+
+def send_alert_view(request):
+    """Handle sending environmental alerts to all users"""
+    if request.method == 'POST':
+        try:
+            # Get form data
+            title = request.POST.get('title', '').strip()
+            description = request.POST.get('description', '').strip()
+            location = request.POST.get('location', '').strip()
+            priority = request.POST.get('priority', 'medium')
+            image = request.FILES.get('image')
+            
+            # Validate required fields
+            if not title or not description:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Title and description are required'
+                })
+            
+            if priority not in ['low', 'medium', 'high', 'critical']:
+                priority = 'medium'
+            
+            # Create a default user if no authentication system is in place
+            # In a real system, you'd use request.user
+            try:
+                created_by = request.user if request.user.is_authenticated else User.objects.first()
+                if not created_by:
+                    # Create a default system user if no users exist
+                    created_by = User.objects.create_user(
+                        username='system',
+                        email='system@ecovalidate.com',
+                        first_name='System',
+                        last_name='Alert'
+                    )
+            except:
+                created_by = User.objects.first()
+            
+            # Create the alert
+            alert = Alert.objects.create(
+                title=title,
+                description=description,
+                location=location,
+                priority=priority,
+                image=image,
+                created_by=created_by
+            )
+            
+            # Send emails in a separate thread to avoid blocking the response
+            def send_emails():
+                try:
+                    success_count, total_count = AlertEmailService.send_alert_to_all_users(alert)
+                    print(f"Alert sent to {success_count}/{total_count} users")
+                except Exception as e:
+                    print(f"Error sending alert emails: {e}")
+            
+            # Start email sending in background
+            email_thread = threading.Thread(target=send_emails)
+            email_thread.daemon = True
+            email_thread.start()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Alert created successfully! Emails are being sent to all registered users.',
+                'alert_id': alert.id
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Error creating alert: {str(e)}'
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method'
+    })
+
+def reports_view(request):
+    """Display all environmental analysis reports with pagination and filtering"""
+    # Get filter parameters
+    risk_filter = request.GET.get('risk', '')
+    status_filter = request.GET.get('status', '')
+    search_query = request.GET.get('search', '')
+    
+    # Start with all reports
+    reports = EnvironmentalAnalysis.objects.all().order_by('-created_at')
+    
+    # Apply filters
+    if risk_filter and risk_filter in ['low', 'high', 'critical']:
+        reports = reports.filter(risk_level=risk_filter)
+    
+    if status_filter and status_filter in ['completed', 'flagged', 'mixed', 'unknown']:
+        reports = reports.filter(status=status_filter)
+    
+    if search_query:
+        reports = reports.filter(
+            Q(title__icontains=search_query) | 
+            Q(location__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+    
+    # Pagination
+    paginator = Paginator(reports, 12)  # Show 12 reports per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Get summary statistics
+    stats = {
+        'total': reports.count(),
+        'critical': reports.filter(risk_level='critical').count(),
+        'high': reports.filter(risk_level='high').count(),
+        'low': reports.filter(risk_level='low').count(),
+        'completed': reports.filter(status='completed').count(),
+        'flagged': reports.filter(status='flagged').count(),
+    }
+    
+    context = {
+        'reports': page_obj,
+        'stats': stats,
+        'risk_filter': risk_filter,
+        'status_filter': status_filter,
+        'search_query': search_query,
+        'risk_choices': EnvironmentalAnalysis.RISK_CHOICES,
+        'status_choices': EnvironmentalAnalysis.STATUS_CHOICES,
+    }
+    
+    return render(request, 'dashboard/reports.html', context)
+
+def report_detail_view(request, report_id):
+    """Display detailed view of a specific environmental analysis report"""
+    report = get_object_or_404(EnvironmentalAnalysis, id=report_id)
+    
+    context = {
+        'report': report,
+    }
+    
+    return render(request, 'dashboard/report_detail.html', context)

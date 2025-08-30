@@ -23,9 +23,10 @@ from django.shortcuts import render
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("dashboard/", include("dashboard.urls")),
+    path('', include('authentication.urls')),
+    path('news/', include('news.urls')),
     path('heatmap/', include('heatmap.urls')),
     path('achievements_dashboard/', include('achievements.urls')),
-    path('', include('authentication.urls')),
 ]
 
 # Serve static files during development
