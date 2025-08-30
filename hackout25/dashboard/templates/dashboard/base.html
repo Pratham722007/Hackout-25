@@ -316,13 +316,15 @@
 <body>
     <div class="sidebar">
         <div class="logo-section">
-            <div class="logo-icon">
-                <i class="fas fa-leaf"></i>
-            </div>
-            <div class="logo-text">
-                <h4>EcoValidate</h4>
-                <small>AI Environmental Analysis</small>
-            </div>
+            <a href="{% url 'dashboard' %}" style="text-decoration: none; color: inherit;">
+                <div class="logo-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="logo-text">
+                    <h4>EcoValidate</h4>
+                    <small>AI Environmental Analysis</small>
+                </div>
+            </a>
         </div>
 
         <div class="nav-section">
@@ -360,9 +362,6 @@
                 </a>
             </div>
             <div class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="fas fa-sms"></i>
-                    SMS
                 <a href="{% url 'news_home' %}" class="nav-link {% if request.resolver_match.url_name == 'news_home' %}active{% endif %}">
                     <i class="fas fa-newspaper"></i>
                     News

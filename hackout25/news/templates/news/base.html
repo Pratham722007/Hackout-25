@@ -345,13 +345,15 @@
 <body>
     <div class="sidebar">
         <div class="logo-section">
-            <div class="logo-icon">
-                <i class="fas fa-leaf"></i>
-            </div>
-            <div class="logo-text">
-                <h4>EcoValidate</h4>
-                <small>AI Environmental Analysis</small>
-            </div>
+            <a href="{% url 'dashboard' %}" style="text-decoration: none; color: inherit;">
+                <div class="logo-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="logo-text">
+                    <h4>EcoValidate</h4>
+                    <small>AI Environmental Analysis</small>
+                </div>
+            </a>
         </div>
 
         <div class="nav-section">
@@ -369,21 +371,33 @@
                 </a>
             </div>
             <div class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="{% url 'reports' %}" class="nav-link">
                     <i class="fas fa-file-alt"></i>
                     Reports
                 </a>
             </div>
             <div class="nav-item">
-                <a href="/news/" class="nav-link active">
+                <a href="{% url 'news_home' %}" class="nav-link active">
                     <i class="fas fa-newspaper"></i>
                     News
                 </a>
             </div>
             <div class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="fas fa-sms"></i>
-                    SMS
+                <a href="{% url 'heatmap' %}" class="nav-link">
+                    <i class="fas fa-map"></i>
+                    HeatMap
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'achievements_dashboard' %}" class="nav-link">
+                    <i class="fas fa-trophy"></i>
+                    Achievements
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#alertModal">
+                    <i class="fas fa-bell"></i>
+                    Alert
                 </a>
             </div>
         </div>
@@ -428,6 +442,72 @@
         {% endblock %}
     </div>
 
+    <!-- Alert Modal -->
+    <div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="alertModalLabel">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Send Environmental Alert
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="alertForm" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="alertTitle" class="modal-title" class="form-label">Alert Title *</label>
+                            <input type="text" class="form-control" id="alertTitle" name="title" required
+                                   placeholder="e.g., Urgent: Forest Fire Detected in Amazon">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="alertDescription" class="form-label">Description *</label>
+                            <textarea class="form-control" id="alertDescription" name="description" rows="4" required
+                                      placeholder="Provide detailed information about the environmental alert..."></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="alertLocation" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="alertLocation" name="location"
+                                   placeholder="e.g., Amazon Rainforest, Brazil">
+                            <div class="form-text">Specify the location of the environmental issue</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="alertLocation" class="form-label">Supporting Image</label>
+                            <input type="file" class="form-control" id="alertImage" name="image" accept="image/*">
+                            <div class="form-text">Upload an image to support your alert (optional)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="alertPriority" class="form-label">Priority Level *</label>
+                            <select class="form-select" id="alertPriority" name="priority" required>
+                                <option value="">Select Priority</option>
+                                <option value="low">Low - Information Only</option>
+                                <option value="medium">Medium - Attention Required</option>
+                                <option value="high">High - Urgent Action Needed</option>
+                                <option value="critical">Critical - Immediate Response Required</option>
+                            </select>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            This alert will be sent via email to all registered users of the EcoValidate platform.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="sendAlertBtn">
+                            <i class="fas fa-paper-plane me-2"></i>Send Alert
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <button id="scrollToTopBtn" class="back-to-top">
         <i class="fas fa-arrow-up"></i>
     </button>
@@ -452,6 +532,52 @@
             window.scrollTo({
                 top: 0,
                 behavior: "smooth"
+            });
+        });
+
+        // Alert form submission
+        document.getElementById('alertForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const sendBtn = document.getElementById('sendAlertBtn');
+            const originalText = sendBtn.innerHTML;
+            
+            // Show loading state
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+            
+            // Create FormData object
+            const formData = new FormData(this);
+            
+            // Send alert via AJAX
+            fetch('/dashboard/send-alert/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert('Alert sent successfully to all users!');
+                    
+                    // Reset form and close modal
+                    this.reset();
+                    bootstrap.Modal.getInstance(document.getElementById('alertModal')).hide();
+                } else {
+                    alert('Error sending alert: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error sending alert. Please try again.');
+            })
+            .finally(() => {
+                // Reset button state
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = originalText;
             });
         });
     </script>
