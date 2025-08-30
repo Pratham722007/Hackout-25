@@ -342,6 +342,12 @@
                 </a>
             </div>
             <div class="nav-item">
+                <a href="{% url 'heatmap' %}" class="nav-link {% if request.resolver_match.url_name == 'new_analysis' %}active{% endif %}" class="nav-link">
+                    <i class="fas fa-file-alt"></i>
+                    HeatMap
+                </a>
+            </div>
+            <div class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="fas fa-sms"></i>
                     SMS
