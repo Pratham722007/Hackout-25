@@ -131,21 +131,27 @@ def determine_status(title, location):
 
 def calculate_confidence(title, location):
     """Calculate confidence score based on specificity of information"""
-    score = 50  # Base score
+    score = 60  # Increased base score from 50 to 60
     
     # Increase confidence for specific locations
-    if any(word in location.lower() for word in ['amazon', 'forest', 'national park', 'reserve']):
-        score += 30
+    if any(word in location.lower() for word in ['amazon', 'forest', 'national park', 'reserve', 'ocean', 'river', 'mountain']):
+        score += 25
     elif location.strip():
-        score += 20
+        score += 15
     
     # Increase confidence for detailed titles
     if len(title) > 30:
-        score += 20
+        score += 15
     elif len(title) > 15:
         score += 10
     
-    return min(score, 100)  # Cap at 100
+    # Boost confidence for environmental keywords in title
+    environmental_keywords = ['pollution', 'deforestation', 'wildlife', 'ecosystem', 'conservation', 
+                            'climate', 'biodiversity', 'endangered', 'habitat', 'sustainable']
+    if any(keyword in title.lower() for keyword in environmental_keywords):
+        score += 10
+    
+    return min(score, 95)  # Cap at 95 instead of 100 for realism
 
 def get_coordinates(request):
     """AJAX view to get coordinates for a location"""
