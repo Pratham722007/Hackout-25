@@ -1,0 +1,442 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - Environmental Dashboard{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'achievements/css/achievements.css' %}" />
+{% endblock %}
+
+{% block content %}
+    <div class="achievements-content">
+        <!-- Leaderboard Header -->
+        <div class="leaderboard-container">
+            <div class="leaderboard-header">
+                <h2>🏆 Environmental Champions</h2>
+                <p>See how you rank among the environmental heroes making a difference!</p>
+                
+                <!-- Filter Buttons -->
+                <div class="leaderboard-filters">
+                    <button class="filter-btn {% if leaderboard_type == 'points' %}active{% endif %}" 
+                            data-filter="points" onclick="window.location.href='?type=points&period={{ period }}'">
+                        🏆 Points
+                    </button>
+                    <button class="filter-btn {% if leaderboard_type == 'reports' %}active{% endif %}" 
+                            data-filter="reports" onclick="window.location.href='?type=reports&period={{ period }}'">
+                        📋 Reports
+                    </button>
+                    <button class="filter-btn {% if leaderboard_type == 'validations' %}active{% endif %}" 
+                            data-filter="validations" onclick="window.location.href='?type=validations&period={{ period }}'">
+                        ✅ Validations
+                    </button>
+                    <button class="filter-btn {% if leaderboard_type == 'streak' %}active{% endif %}" 
+                            data-filter="streak" onclick="window.location.href='?type=streak&period={{ period }}'">
+                        🔥 Streak
+                    </button>
+                    <button class="filter-btn {% if leaderboard_type == 'achievements' %}active{% endif %}" 
+                            data-filter="achievements" onclick="window.location.href='?type=achievements&period={{ period }}'">
+                        🎖️ Achievements
+                    </button>
+                </div>
+                
+                <!-- Period Filters -->
+                <div class="period-filters">
+                    <button class="period-btn {% if period == 'all' %}active{% endif %}" 
+                            onclick="window.location.href='?type={{ leaderboard_type }}&period=all'">
+                        All Time
+                    </button>
+                    <button class="period-btn {% if period == 'month' %}active{% endif %}" 
+                            onclick="window.location.href='?type={{ leaderboard_type }}&period=month'">
+                        This Month
+                    </button>
+                    <button class="period-btn {% if period == 'week' %}active{% endif %}" 
+                            onclick="window.location.href='?type={{ leaderboard_type }}&period=week'">
+                        This Week
+                    </button>
+                </div>
+            </div>
+            
+            <!-- User's Position -->
+            {% if user_rank > 0 %}
+            <div class="user-position">
+                <div class="position-card">
+                    <div class="position-icon">
+                        {% if user_rank == 1 %}🥇
+                        {% elif user_rank == 2 %}🥈
+                        {% elif user_rank == 3 %}🥉
+                        {% else %}🏅{% endif %}
+                    </div>
+                    <div class="position-info">
+                        <h4>Your Position</h4>
+                        <p>Rank #{{ user_rank }} with {{ user_score }} 
+                           {% if leaderboard_type == 'points' %}points
+                           {% elif leaderboard_type == 'reports' %}reports
+                           {% elif leaderboard_type == 'validations' %}validations
+                           {% elif leaderboard_type == 'streak' %}day streak
+                           {% else %}achievements{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Leaderboard List -->
+            <div class="leaderboard-list">
+                {% if leaderboard_entries %}
+                    {% for entry in leaderboard_entries %}
+                    <div class="leaderboard-row rank-{{ forloop.counter }} {% if entry.user == request.user %}current-user{% endif %}">
+                        <div class="rank-badge">
+                            {% if forloop.counter == 1 %}🥇
+                            {% elif forloop.counter == 2 %}🥈
+                            {% elif forloop.counter == 3 %}🥉
+                            {% else %}{{ forloop.counter }}{% endif %}
+                        </div>
+                        
+                        <div class="user-avatar">
+                            <div class="avatar-circle">
+                                {{ entry.user.username|slice:":1"|upper }}
+                            </div>
+                        </div>
+                        
+                        <div class="user-info">
+                            <div class="username">
+                                {{ entry.user.username }}
+                                {% if entry.user == request.user %}
+                                    <span class="you-badge">You</span>
+                                {% endif %}
+                            </div>
+                            <div class="user-level">Level {{ entry.level }}</div>
+                        </div>
+                        
+                        <div class="user-stats">
+                            <div class="main-stat">
+                                {% if leaderboard_type == 'points' %}{{ entry.total_points }}
+                                {% elif leaderboard_type == 'reports' %}{{ entry.reports_created }}
+                                {% elif leaderboard_type == 'validations' %}{{ entry.reports_validated }}
+                                {% elif leaderboard_type == 'streak' %}{{ entry.streak_best }}
+                                {% else %}{{ entry.achievements_unlocked }}{% endif %}
+                            </div>
+                            <div class="stat-label">
+                                {% if leaderboard_type == 'points' %}points
+                                {% elif leaderboard_type == 'reports' %}reports
+                                {% elif leaderboard_type == 'validations' %}validations
+                                {% elif leaderboard_type == 'streak' %}day streak
+                                {% else %}achievements{% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="additional-stats">
+                            <div class="mini-stat">
+                                <span class="mini-value">{{ entry.achievements_unlocked }}</span>
+                                <span class="mini-label">🏆</span>
+                            </div>
+                            {% if leaderboard_type != 'reports' %}
+                            <div class="mini-stat">
+                                <span class="mini-value">{{ entry.reports_created }}</span>
+                                <span class="mini-label">📋</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-leaderboard">
+                        <div class="empty-icon">🏆</div>
+                        <h3>No Data Available</h3>
+                        <p>Be the first to appear on the leaderboard by creating reports and earning achievements!</p>
+                        <a href="{% url 'new_analysis' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Create Your First Report
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if leaderboard_entries.has_other_pages %}
+        <nav aria-label="Leaderboard pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if leaderboard_entries.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1&type={{ leaderboard_type }}&period={{ period }}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ leaderboard_entries.previous_page_number }}&type={{ leaderboard_type }}&period={{ period }}">Previous</a>
+                    </li>
+                {% endif %}
+
+                {% for page_num in leaderboard_entries.paginator.page_range %}
+                    {% if page_num == leaderboard_entries.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% elif page_num > leaderboard_entries.number|add:-3 and page_num < leaderboard_entries.number|add:3 %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_num }}&type={{ leaderboard_type }}&period={{ period }}">{{ page_num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if leaderboard_entries.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ leaderboard_entries.next_page_number }}&type={{ leaderboard_type }}&period={{ period }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ leaderboard_entries.paginator.num_pages }}&type={{ leaderboard_type }}&period={{ period }}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        <!-- Quick Actions -->
+        <div class="content-card mt-4">
+            <h5>🚀 Quick Actions</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <a href="{% url 'achievements_dashboard' %}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-trophy me-2"></i>My Achievements
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'heatmap' %}" class="btn btn-secondary w-100 mb-2">
+                        <i class="fas fa-map me-2"></i>View Heatmap
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'new_analysis' %}" class="btn btn-success w-100 mb-2">
+                        <i class="fas fa-plus me-2"></i>Create Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'achievements/js/achievements.js' %}"></script>
+    <style>
+        .leaderboard-filters {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn, .period-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .filter-btn:hover, .period-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+        
+        .filter-btn.active, .period-btn.active {
+            background: white;
+            color: #16a085;
+            border-color: white;
+            font-weight: 600;
+        }
+        
+        .period-filters {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .user-position {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            margin: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #16a085;
+        }
+        
+        .position-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .position-icon {
+            font-size: 2rem;
+        }
+        
+        .position-info h4 {
+            margin: 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        
+        .position-info p {
+            margin: 5px 0 0 0;
+            color: #666;
+        }
+        
+        .leaderboard-list {
+            padding: 0 20px 20px 20px;
+        }
+        
+        .leaderboard-row {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            gap: 20px;
+        }
+        
+        .leaderboard-row:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        
+        .leaderboard-row.current-user {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border: 2px solid #28a745;
+        }
+        
+        .rank-badge {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #16a085;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .rank-1 .rank-badge { color: #FFD700; }
+        .rank-2 .rank-badge { color: #C0C0C0; }
+        .rank-3 .rank-badge { color: #CD7F32; }
+        
+        .user-avatar {
+            flex-shrink: 0;
+        }
+        
+        .avatar-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #16a085, #138f7a);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .username {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .you-badge {
+            background: #16a085;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+        
+        .user-level {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .user-stats {
+            text-align: center;
+            margin-right: 20px;
+        }
+        
+        .main-stat {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #16a085;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .additional-stats {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .mini-stat {
+            text-align: center;
+        }
+        
+        .mini-value {
+            display: block;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .mini-label {
+            font-size: 0.9rem;
+        }
+        
+        .empty-leaderboard {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .empty-leaderboard h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .empty-leaderboard p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+        
+        @media (max-width: 768px) {
+            .leaderboard-row {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .additional-stats {
+                justify-content: center;
+            }
+            
+            .user-stats {
+                margin-right: 0;
+            }
+        }
+    </style>
+{% endblock %}

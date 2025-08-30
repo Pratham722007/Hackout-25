@@ -7,7 +7,7 @@ from heatmap.models import Report
 
 
 class Command(BaseCommand):
-    help = 'Create sample environmental reports for heatmap testing'
+    help = 'DEPRECATED: Create sample environmental reports for heatmap testing. Heatmap now uses real dashboard data.'
 
     def add_arguments(self, parser):
         parser.add_argument(

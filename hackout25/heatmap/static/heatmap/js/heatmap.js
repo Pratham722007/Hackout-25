@@ -371,7 +371,8 @@ if (typeof window !== 'undefined') {
 }
 
 // Initialize additional functionality when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
+// Note: Only add utility functions, do not initialize maps here to avoid conflicts
+if (typeof window !== 'undefined') {
     // Add export functionality if export button exists
     const exportBtn = document.getElementById('exportData');
     if (exportBtn) {
@@ -387,6 +388,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add keyboard shortcuts
     document.addEventListener('keydown', function(e) {
+        // Only add shortcuts if we're on the heatmap page
+        if (!document.getElementById('map')) return;
+        
         // Ctrl/Cmd + R to refresh map
         if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
             e.preventDefault();
@@ -411,4 +415,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-});
+}

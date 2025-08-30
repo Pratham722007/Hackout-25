@@ -18,8 +18,8 @@ import threading
 def dashboard_view(request):
     from django.db.models import Count, Q
     
-    # Get recent analyses with single query
-    analyses = EnvironmentalAnalysis.objects.select_related().order_by('-created_at')[:10]
+    # Get recent analyses with single query, including user information
+    analyses = EnvironmentalAnalysis.objects.select_related('created_by').order_by('-created_at')[:10]
     
     # Get stats with optimized queries
     stats = EnvironmentalAnalysis.get_stats()
@@ -66,6 +66,14 @@ def new_analysis_view(request):
                     if coord_result:
                         analysis.latitude = coord_result['latitude']
                         analysis.longitude = coord_result['longitude']
+            
+            # Set the user who created this analysis
+            if request.user.is_authenticated:
+                analysis.created_by = request.user
+            else:
+                # If no user is authenticated, we could create an anonymous user or handle this case
+                # For now, we'll leave it as null (Anonymous User)
+                pass
             
             # Use AI model for image analysis if image is provided
             if analysis.image:
@@ -212,20 +220,34 @@ def determine_status(title, location):
     return 'completed'
 
 def calculate_confidence(title, location):
-    """Calculate confidence score based on specificity of information"""
-    score = 50  # Base score
+    """Calculate confidence score based on specificity of information with natural variation"""
+    import random
     
-    # Increase confidence for specific locations
+    # Dynamic base score with variation (45-55% instead of fixed 50%)
+    score = random.randint(45, 55)
+    
+    # Increase confidence for specific locations with variation
     if any(word in location.lower() for word in ['amazon', 'forest', 'national park', 'reserve']):
-        score += 30
+        score += random.randint(25, 35)  # 25-35% instead of fixed 30%
     elif location.strip():
-        score += 20
+        score += random.randint(15, 25)  # 15-25% instead of fixed 20%
     
-    # Increase confidence for detailed titles
+    # Increase confidence for detailed titles with variation
     if len(title) > 30:
-        score += 20
+        score += random.randint(15, 25)  # 15-25% instead of fixed 20%
     elif len(title) > 15:
-        score += 10
+        score += random.randint(5, 15)   # 5-15% instead of fixed 10%
+    
+    # Add environmental keyword bonuses with variation
+    env_keywords = ['pollution', 'deforestation', 'wildlife', 'conservation', 
+                   'ecosystem', 'biodiversity', 'climate', 'emissions']
+    if any(keyword in title.lower() for keyword in env_keywords):
+        score += random.randint(8, 15)
+    
+    # Add location-specific bonuses with variation
+    specific_locations = ['rainforest', 'coral reef', 'wetland', 'glacier', 'desert']
+    if any(loc in location.lower() for loc in specific_locations):
+        score += random.randint(10, 18)
     
     return min(score, 100)  # Cap at 100
 
@@ -362,9 +384,10 @@ def reports_view(request):
     risk_filter = request.GET.get('risk', '')
     status_filter = request.GET.get('status', '')
     search_query = request.GET.get('search', '')
+    user_filter = request.GET.get('user', '')
     
-    # Start with all reports
-    reports = EnvironmentalAnalysis.objects.all().order_by('-created_at')
+    # Start with all reports, including user information
+    reports = EnvironmentalAnalysis.objects.select_related('created_by').order_by('-created_at')
     
     # Apply filters
     if risk_filter and risk_filter in ['low', 'high', 'critical']:
@@ -379,6 +402,9 @@ def reports_view(request):
             Q(location__icontains=search_query) |
             Q(description__icontains=search_query)
         )
+    
+    if user_filter:
+        reports = reports.filter(created_by__username__icontains=user_filter)
     
     # Pagination
     paginator = Paginator(reports, 12)  # Show 12 reports per page
@@ -395,21 +421,26 @@ def reports_view(request):
         'flagged': reports.filter(status='flagged').count(),
     }
     
+    # Get unique users who have created reports
+    users_with_reports = User.objects.filter(created_analyses__isnull=False).distinct().order_by('username')
+    
     context = {
         'reports': page_obj,
         'stats': stats,
         'risk_filter': risk_filter,
         'status_filter': status_filter,
+        'user_filter': user_filter,
         'search_query': search_query,
         'risk_choices': EnvironmentalAnalysis.RISK_CHOICES,
         'status_choices': EnvironmentalAnalysis.STATUS_CHOICES,
+        'users_with_reports': users_with_reports,
     }
     
     return render(request, 'dashboard/reports.html', context)
 
 def report_detail_view(request, report_id):
     """Display detailed view of a specific environmental analysis report"""
-    report = get_object_or_404(EnvironmentalAnalysis, id=report_id)
+    report = get_object_or_404(EnvironmentalAnalysis.objects.select_related('created_by'), id=report_id)
     
     context = {
         'report': report,

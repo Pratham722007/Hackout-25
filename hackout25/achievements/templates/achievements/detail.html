@@ -1,0 +1,571 @@
+{% extends 'dashboard/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - Environmental Dashboard{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'achievements/css/achievements.css' %}" />
+{% endblock %}
+
+{% block content %}
+    <div class="achievements-content">
+        <!-- Back Button -->
+        <div class="mb-4">
+            <a href="{% url 'achievements:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Achievements
+            </a>
+        </div>
+        
+        <!-- Achievement Detail Header -->
+        <div class="achievement-detail-header">
+            <div class="detail-card {% if user_achievement.is_unlocked %}unlocked{% else %}locked{% endif %}">
+                <div class="detail-icon-section">
+                    <div class="detail-achievement-icon {% if user_achievement.is_unlocked %}unlocked{% endif %}">
+                        {{ achievement.icon }}
+                    </div>
+                    <div class="detail-tier-badge tier-{{ achievement.tier }}">
+                        {{ achievement.get_tier_display }}
+                    </div>
+                </div>
+                
+                <div class="detail-info">
+                    <h1 class="achievement-title">
+                        {{ achievement.name }}
+                        {% if user_achievement.is_unlocked %}
+                            <span class="unlock-badge">✅ Unlocked!</span>
+                        {% else %}
+                            <span class="lock-badge">🔒 Locked</span>
+                        {% endif %}
+                    </h1>
+                    
+                    <p class="achievement-description">{{ achievement.description }}</p>
+                    
+                    <div class="achievement-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Category:</span>
+                            <span class="meta-value">{{ achievement.get_category_display_with_emoji }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Points:</span>
+                            <span class="meta-value">🏆 {{ achievement.points }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Type:</span>
+                            <span class="meta-value">{{ achievement.get_action_type_display }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Section -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="content-card">
+                    <h5>📊 Your Progress</h5>
+                    
+                    <div class="progress-section">
+                        {% if user_achievement.is_unlocked %}
+                            <div class="completed-progress">
+                                <div class="progress-icon">🎉</div>
+                                <div class="progress-text">
+                                    <h4>Congratulations!</h4>
+                                    <p>You unlocked this achievement on {{ user_achievement.unlocked_at|date:"F d, Y \a\t g:i A" }}</p>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="progress-details">
+                                <div class="progress-header">
+                                    <span class="progress-title">Progress to Unlock</span>
+                                    <span class="progress-percentage">{{ user_achievement.progress_percentage|floatformat:1 }}%</span>
+                                </div>
+                                
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: {{ user_achievement.progress_percentage }}%"></div>
+                                    </div>
+                                    <div class="progress-numbers">
+                                        {{ user_achievement.current_progress }} / {{ achievement.target_value }}
+                                    </div>
+                                </div>
+                                
+                                <div class="progress-help">
+                                    <h6>How to unlock:</h6>
+                                    <p class="help-text">
+                                        {% if achievement.action_type == 'report_count' %}
+                                            Submit {{ achievement.target_value }} environmental report{{ achievement.target_value|pluralize }}.
+                                            You need {{ achievement.target_value|sub:user_achievement.current_progress }} more report{{ achievement.target_value|sub:user_achievement.current_progress|pluralize }}.
+                                        {% elif achievement.action_type == 'validation_count' %}
+                                            Validate {{ achievement.target_value }} report{{ achievement.target_value|pluralize }}.
+                                            You need {{ achievement.target_value|sub:user_achievement.current_progress }} more validation{{ achievement.target_value|sub:user_achievement.current_progress|pluralize }}.
+                                        {% elif achievement.action_type == 'streak_days' %}
+                                            Stay active for {{ achievement.target_value }} consecutive day{{ achievement.target_value|pluralize }}.
+                                            You need {{ achievement.target_value|sub:user_achievement.current_progress }} more day{{ achievement.target_value|sub:user_achievement.current_progress|pluralize }} in your streak.
+                                        {% elif achievement.action_type == 'map_usage' %}
+                                            Use the heatmap {{ achievement.target_value }} time{{ achievement.target_value|pluralize }}.
+                                            You need {{ achievement.target_value|sub:user_achievement.current_progress }} more view{{ achievement.target_value|sub:user_achievement.current_progress|pluralize }}.
+                                        {% elif achievement.action_type == 'high_severity' %}
+                                            Report {{ achievement.target_value }} high or critical severity incident{{ achievement.target_value|pluralize }}.
+                                            You need {{ achievement.target_value|sub:user_achievement.current_progress }} more high-severity report{{ achievement.target_value|sub:user_achievement.current_progress|pluralize }}.
+                                        {% elif achievement.action_type == 'location_variety' %}
+                                            Report from {{ achievement.target_value }} different location{{ achievement.target_value|pluralize }}.
+                                            You need {{ achievement.target_value|sub:user_achievement.current_progress }} more unique location{{ achievement.target_value|sub:user_achievement.current_progress|pluralize }}.
+                                        {% elif achievement.action_type == 'report_types' %}
+                                            Use {{ achievement.target_value }} different report type{{ achievement.target_value|pluralize }}.
+                                            You need {{ achievement.target_value|sub:user_achievement.current_progress }} more report type{{ achievement.target_value|sub:user_achievement.current_progress|pluralize }}.
+                                        {% else %}
+                                            Complete the required actions to unlock this achievement.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                
+                                <div class="quick-actions">
+                                    <h6>Quick Actions:</h6>
+                                    <div class="action-buttons">
+                                        {% if achievement.action_type == 'report_count' or achievement.action_type == 'high_severity' or achievement.action_type == 'location_variety' or achievement.action_type == 'report_types' %}
+                                            <a href="{% url 'dashboard:new_analysis' %}" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-plus me-1"></i>Create Report
+                                            </a>
+                                        {% endif %}
+                                        {% if achievement.action_type == 'map_usage' %}
+                                            <a href="{% url 'dashboard:heatmap' %}" class="btn btn-secondary btn-sm">
+                                                <i class="fas fa-map me-1"></i>View Heatmap
+                                            </a>
+                                        {% endif %}
+                                        {% if achievement.action_type == 'validation_count' %}
+                                            <a href="{% url 'dashboard:reports' %}" class="btn btn-info btn-sm">
+                                                <i class="fas fa-check me-1"></i>Validate Reports
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <!-- Achievement Stats -->
+                <div class="content-card">
+                    <h5>📈 Achievement Stats</h5>
+                    
+                    <div class="stat-row">
+                        <span class="stat-label">Completion Rate:</span>
+                        <span class="stat-value">{{ completion_rate }}%</span>
+                    </div>
+                    
+                    <div class="stat-row">
+                        <span class="stat-label">Users Unlocked:</span>
+                        <span class="stat-value">{{ unlocked_users }} / {{ total_users }}</span>
+                    </div>
+                    
+                    <div class="rarity-badge rarity-{{ achievement.tier }}">
+                        {% if completion_rate < 5 %}
+                            🔥 Ultra Rare
+                        {% elif completion_rate < 15 %}
+                            ⭐ Rare
+                        {% elif completion_rate < 40 %}
+                            🌟 Uncommon
+                        {% else %}
+                            ✨ Common
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Recent Unlocks -->
+                {% if recent_unlocks %}
+                <div class="content-card mt-3">
+                    <h5>🎊 Recent Unlocks</h5>
+                    
+                    <div class="recent-unlocks-list">
+                        {% for unlock in recent_unlocks %}
+                        <div class="unlock-item">
+                            <div class="unlock-avatar">
+                                {{ unlock.user.username|slice:":1"|upper }}
+                            </div>
+                            <div class="unlock-info">
+                                <div class="unlock-user">{{ unlock.user.username }}</div>
+                                <div class="unlock-time">{{ unlock.unlocked_at|timesince }} ago</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Related Achievements -->
+        <div class="content-card mt-4">
+            <h5>🔗 Related Achievements</h5>
+            <p>Other achievements in the {{ achievement.get_category_display_with_emoji }} category:</p>
+            
+            <div class="related-achievements">
+                <!-- Note: Related achievements would need to be passed from the view -->
+                <!-- This is a placeholder for future enhancement -->
+                <div class="text-center text-muted py-4">
+                    <p>Related achievements coming soon!</p>
+                    <a href="{% url 'achievements:dashboard' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-trophy me-1"></i>View All Achievements
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'achievements/js/achievements.js' %}"></script>
+    <style>
+        .achievement-detail-header {
+            margin-bottom: 30px;
+        }
+        
+        .detail-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .detail-card.unlocked {
+            background: linear-gradient(135deg, #f8fff4, #e8f5e8);
+            border: 2px solid #28a745;
+        }
+        
+        .detail-card.locked {
+            opacity: 0.8;
+        }
+        
+        .detail-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(22, 160, 133, 0.1) 0%, transparent 70%);
+            transform: rotate(45deg);
+        }
+        
+        .detail-icon-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-achievement-icon {
+            font-size: 4rem;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #f8f9fa;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .detail-achievement-icon.unlocked {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            animation: celebrateIcon 2s ease-in-out infinite;
+        }
+        
+        @keyframes celebrateIcon {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .detail-tier-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .achievement-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .unlock-badge, .lock-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-left: 15px;
+            vertical-align: middle;
+        }
+        
+        .unlock-badge {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+        
+        .lock-badge {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .achievement-meta {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .meta-label {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .meta-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .completed-progress {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            text-align: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        
+        .progress-icon {
+            font-size: 3rem;
+            animation: bounce 2s infinite;
+        }
+        
+        .completed-progress h4 {
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+        
+        .progress-details {
+            padding: 20px 0;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .progress-title {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .progress-percentage {
+            font-weight: 600;
+            color: #16a085;
+            font-size: 1.1rem;
+        }
+        
+        .progress-bar-container {
+            margin-bottom: 20px;
+        }
+        
+        .progress-numbers {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .progress-help {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #16a085;
+            margin-bottom: 20px;
+        }
+        
+        .progress-help h6 {
+            color: #16a085;
+            margin-bottom: 10px;
+        }
+        
+        .help-text {
+            margin: 0;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .quick-actions h6 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #666;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .rarity-badge {
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+        
+        .rarity-bronze { background: linear-gradient(135deg, #CD7F32, #A0522D); color: white; }
+        .rarity-silver { background: linear-gradient(135deg, #C0C0C0, #A8A8A8); color: #333; }
+        .rarity-gold { background: linear-gradient(135deg, #FFD700, #DAA520); color: #333; }
+        .rarity-platinum { background: linear-gradient(135deg, #E5E4E2, #C0C0C0); color: #333; }
+        .rarity-diamond { background: linear-gradient(135deg, #B9F2FF, #87CEEB); color: #333; }
+        .rarity-legendary { background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; }
+        
+        .recent-unlocks-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .unlock-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .unlock-item:last-child {
+            border-bottom: none;
+        }
+        
+        .unlock-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #16a085, #138f7a);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .unlock-user {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .unlock-time {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .related-achievements {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .mini-achievement-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .mini-achievement-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .achievement-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .mini-icon {
+            font-size: 1.5rem;
+        }
+        
+        .mini-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .mini-tier {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .achievement-title {
+                font-size: 2rem;
+            }
+            
+            .detail-icon-section {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .achievement-meta {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .action-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+{% endblock %}

@@ -258,9 +258,9 @@
                     <label for="timeRange">Time Range:</label>
                     <select id="timeRange">
                         <option value="7">Last 7 days</option>
-                        <option value="30" selected>Last 30 days</option>
+                        <option value="30">Last 30 days</option>
                         <option value="90">Last 90 days</option>
-                        <option value="365">Last year</option>
+                        <option value="365" selected>Last year</option>
                         <option value="0">All time</option>
                     </select>
                 </div>
@@ -287,7 +287,6 @@
 {% block extra_js %}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-    <script src="{% static 'achievements/js/achievements.js' %}"></script>
     <script>
         // API endpoints
         const API_ENDPOINTS = {
@@ -316,8 +315,12 @@
                     return;
                 }
                 
-                // Create map
-                map = L.map('map').setView([20.5937, 78.9629], 5); // Center on India
+                // Ensure map container is empty before creating new map
+                const mapContainer = document.getElementById('map');
+                mapContainer.innerHTML = '';
+                
+                // Create map with global view to show all reports
+                map = L.map('map').setView([25.0, 0.0], 2); // Global center view
                 console.log('Map created successfully');
                 
                 // Add tile layer
@@ -480,7 +483,7 @@
         
         // Reset map view
         function resetView() {
-            map.setView([20.5937, 78.9629], 5);
+            map.setView([25.0, 0.0], 2); // Global view to see all reports
         }
         
         // Show/hide loading indicator
