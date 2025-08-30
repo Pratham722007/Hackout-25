@@ -8,7 +8,7 @@
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h1><i class="fas fa-file-alt me-3"></i>Environmental Reports</h1>
-            <p class="text-muted mb-0">View and manage all environmental analysis reports from the community</p>
+            <p class="text-muted mb-0">View and manage all environmental analysis reports from the community. Reports are now linked to their creators.</p>
         </div>
         <a href="{% url 'new_analysis' %}" class="btn btn-primary">
             <i class="fas fa-plus me-2"></i>New Report
@@ -69,7 +69,7 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label class="form-label">Status</label>
             <select name="status" class="form-select">
                 <option value="">All Statuses</option>
@@ -78,7 +78,16 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-2">
+            <label class="form-label">User</label>
+            <select name="user" class="form-select">
+                <option value="">All Users</option>
+                {% for user in users_with_reports %}
+                    <option value="{{ user.username }}" {% if user_filter == user.username %}selected{% endif %}>{{ user.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
             <label class="form-label">Search</label>
             <input type="text" name="search" class="form-control" placeholder="Search by title, location, or description..." value="{{ search_query }}">
         </div>
@@ -112,6 +121,14 @@
                                 <h6 class="card-title fw-bold mb-2">{{ report.title|truncatechars:50 }}</h6>
                                 <p class="text-muted small mb-1">
                                     <i class="fas fa-map-marker-alt me-1"></i>{{ report.location|truncatechars:30 }}
+                                </p>
+                                <p class="text-muted small mb-1">
+                                    <i class="fas fa-user me-1"></i>
+                                    {% if report.created_by %}
+                                        {{ report.created_by.username }}
+                                    {% else %}
+                                        Anonymous User
+                                    {% endif %}
                                 </p>
                                 <p class="text-muted small mb-0">
                                     <i class="fas fa-clock me-1"></i>{{ report.created_at|date:"M d, Y H:i" }}
@@ -178,10 +195,10 @@
             <ul class="pagination justify-content-center">
                 {% if reports.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">First</a>
+                        <a class="page-link" href="?page=1{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">First</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ reports.previous_page_number }}{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                        <a class="page-link" href="?page={{ reports.previous_page_number }}{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
                     </li>
                 {% endif %}
 
@@ -192,17 +209,17 @@
                         </li>
                     {% elif page_num > reports.number|add:-3 and page_num < reports.number|add:3 %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_num }}{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ page_num }}</a>
+                            <a class="page-link" href="?page={{ page_num }}{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ page_num }}</a>
                         </li>
                     {% endif %}
                 {% endfor %}
 
                 {% if reports.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ reports.next_page_number }}{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                        <a class="page-link" href="?page={{ reports.next_page_number }}{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ reports.paginator.num_pages }}{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Last</a>
+                        <a class="page-link" href="?page={{ reports.paginator.num_pages }}{% if risk_filter %}&risk={{ risk_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Last</a>
                     </li>
                 {% endif %}
             </ul>
@@ -214,7 +231,7 @@
             <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
             <h5 class="text-muted">No Reports Found</h5>
             <p class="text-muted">
-                {% if search_query or risk_filter or status_filter %}
+                {% if search_query or risk_filter or status_filter or user_filter %}
                     No reports match your current filters. Try adjusting your search criteria.
                 {% else %}
                     No environmental reports have been submitted yet.

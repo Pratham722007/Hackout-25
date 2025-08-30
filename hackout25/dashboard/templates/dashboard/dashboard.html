@@ -77,6 +77,13 @@
                                     <br>
                                     <i class="fas fa-globe me-1"></i>{{ analysis.latitude|floatformat:6 }}, {{ analysis.longitude|floatformat:6 }}
                                 {% endif %}
+                                <br>
+                                <i class="fas fa-user me-1"></i>
+                                {% if analysis.created_by %}
+                                    {{ analysis.created_by.username }}
+                                {% else %}
+                                    Anonymous User
+                                {% endif %}
                                 • {{ analysis.created_at|date:"M d, Y" }}
                             </small>
                             <div class="d-flex align-items-center">

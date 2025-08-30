@@ -25,6 +25,7 @@ class EnvironmentalAnalysis(models.Model):
     risk_level = models.CharField(max_length=10, choices=RISK_CHOICES, default='low')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='completed')
     confidence = models.IntegerField(default=0)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='environmental_analyses', null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     
     class Meta:
