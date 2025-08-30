@@ -1,13 +1,10 @@
-from django.urls import path
-from .views import index, clerk_webhook
+from django.urls import path, re_path
+from .views import index, clerk_webhook, redirect_to_dashboard
 
 urlpatterns = [
-    # React app handles all routing - login/signup automatically shown
     path('', index, name='index'),
-    path('login/', index, name='login'),
-    path('signup/', index, name='signup'),
-    path('map/', index, name='map'),
-    
-    # Clerk webhook endpoint
+    re_path(r'^sign-in.*$', index, name='sign-in'),   # catch /sign-in and any subroutes
+    re_path(r'^sign-up.*$', index, name='sign-up'),   # catch /sign-up and any subroutes
+    path('dashboard/', redirect_to_dashboard, name='dashboard'),
     path('webhooks/clerk/', clerk_webhook, name='clerk_webhook'),
 ]

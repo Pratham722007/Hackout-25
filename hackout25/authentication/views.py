@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -8,6 +8,10 @@ import json
 def index(request):
     """Serve the React app with Clerk authentication - this will show login/signup automatically"""
     return render(request, 'index.html')
+
+def redirect_to_dashboard(request):
+    """Redirect users to dashboard after successful authentication"""
+    return redirect('/dashboard/')
 
 @csrf_exempt
 def clerk_webhook(request):
