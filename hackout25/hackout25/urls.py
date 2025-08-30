@@ -24,6 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("dashboard/", include("dashboard.urls")),
     path('heatmap/', include('heatmap.urls')),
+    path('achievements_dashboard/', include('achievements.urls')),
     path('', include('authentication.urls')),
 ]
 

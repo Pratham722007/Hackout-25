@@ -7,23 +7,26 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="{% static 'heatmap/css/heatmap.css' %}" />
     <style>
-        .content-wrapper {
-            height: calc(100vh - 60px);
+        /* Override main content styles for fullscreen map */
+        .main-content {
+            padding: 0 !important;
+            height: calc(100vh - 40px);
             overflow: hidden;
         }
         
         .heatmap-container {
-            height: 100%;
+            height: 100vh;
             display: flex;
             flex-direction: column;
         }
         
         .heatmap-controls {
             background: white;
-            padding: 15px;
-            border-bottom: 1px solid #e0e0e0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px 20px;
+            border-bottom: 2px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             z-index: 1000;
+            flex-shrink: 0;
         }
         
         .controls-row {
@@ -40,56 +43,73 @@
         }
         
         .control-group label {
-            font-weight: 500;
+            font-weight: 600;
             color: #333;
             margin: 0;
             white-space: nowrap;
+            font-size: 14px;
         }
         
         .control-group select, .control-group input {
-            padding: 6px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
             font-size: 14px;
-            min-width: 120px;
+            min-width: 140px;
+            background: white;
+        }
+        
+        .control-group select:focus, .control-group input:focus {
+            outline: none;
+            border-color: #16a085;
+            box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1);
         }
         
         .btn-group {
             display: flex;
-            gap: 8px;
+            gap: 10px;
+            margin-left: auto;
         }
         
         .btn {
-            padding: 8px 16px;
+            padding: 10px 18px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
-            transition: background-color 0.3s;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
         
         .btn-primary {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #16a085, #138f7a);
             color: white;
+            box-shadow: 0 4px 8px rgba(22, 160, 133, 0.3);
         }
         
         .btn-primary:hover {
-            background-color: #0056b3;
+            background: linear-gradient(135deg, #138f7a, #117a65);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(22, 160, 133, 0.4);
         }
         
         .btn-secondary {
-            background-color: #6c757d;
+            background: linear-gradient(135deg, #6c757d, #545b62);
             color: white;
+            box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
         }
         
         .btn-secondary:hover {
-            background-color: #545b62;
+            background: linear-gradient(135deg, #545b62, #383d41);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(108, 117, 125, 0.4);
         }
         
         #map {
             flex: 1;
-            min-height: 0;
+            min-height: 500px;
             width: 100%;
+            position: relative;
         }
         
         .map-loading {
@@ -97,22 +117,26 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px 35px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
             z-index: 1001;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 500;
+            color: #495057;
         }
         
         .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #007bff;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #16a085;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-right: 10px;
+            margin-right: 12px;
         }
         
         @keyframes spin {
@@ -121,53 +145,77 @@
         }
         
         .report-popup {
-            max-width: 300px;
+            max-width: 320px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         .report-popup h4 {
-            margin: 0 0 10px 0;
-            color: #333;
-            font-size: 16px;
+            margin: 0 0 12px 0;
+            color: #212529;
+            font-size: 18px;
+            font-weight: 600;
         }
         
         .report-popup .meta {
-            font-size: 12px;
-            color: #666;
-            margin: 5px 0;
+            font-size: 13px;
+            color: #6c757d;
+            margin: 8px 0;
+            line-height: 1.4;
         }
         
         .report-popup .description {
-            margin: 10px 0;
+            margin: 12px 0;
             font-size: 14px;
+            color: #495057;
+            line-height: 1.5;
         }
         
-        .severity-badge {
+        .severity-badge, .status-badge {
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
             font-size: 11px;
-            font-weight: bold;
+            font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 6px;
+            margin-bottom: 4px;
         }
         
-        .severity-low { background-color: #d4edda; color: #155724; }
-        .severity-medium { background-color: #fff3cd; color: #856404; }
-        .severity-high { background-color: #f8d7da; color: #721c24; }
-        .severity-critical { background-color: #f5c6cb; color: #491217; }
+        .severity-low { background: linear-gradient(135deg, #d4edda, #c3e6cb); color: #155724; border: 1px solid #c3e6cb; }
+        .severity-medium { background: linear-gradient(135deg, #fff3cd, #ffeaa7); color: #856404; border: 1px solid #ffeaa7; }
+        .severity-high { background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; border: 1px solid #f5c6cb; }
+        .severity-critical { background: linear-gradient(135deg, #f5c6cb, #f1b0b7); color: #491217; border: 1px solid #f1b0b7; }
         
-        .status-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
+        .status-pending { background: linear-gradient(135deg, #e2e3e5, #d6d8db); color: #383d41; border: 1px solid #d6d8db; }
+        .status-validated { background: linear-gradient(135deg, #d4edda, #c3e6cb); color: #155724; border: 1px solid #c3e6cb; }
+        .status-rejected { background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; border: 1px solid #f5c6cb; }
+        .status-under_review { background: linear-gradient(135deg, #d1ecf1, #bee5eb); color: #0c5460; border: 1px solid #bee5eb; }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .controls-row {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            
+            .control-group {
+                flex-direction: column;
+                gap: 5px;
+                align-items: stretch;
+            }
+            
+            .btn-group {
+                margin-left: 0;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .heatmap-controls {
+                padding: 10px 15px;
+            }
         }
-        
-        .status-pending { background-color: #e2e3e5; color: #383d41; }
-        .status-validated { background-color: #d4edda; color: #155724; }
-        .status-rejected { background-color: #f8d7da; color: #721c24; }
-        .status-under_review { background-color: #d1ecf1; color: #0c5460; }
     </style>
 {% endblock %}
 
@@ -239,6 +287,7 @@
 {% block extra_js %}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="{% static 'achievements/js/achievements.js' %}"></script>
     <script>
         // API endpoints
         const API_ENDPOINTS = {
@@ -257,24 +306,42 @@
         
         // Initialize map
         function initializeMap() {
-            // Create map
-            map = L.map('map').setView([20.5937, 78.9629], 5); // Center on India
-            
-            // Add tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 18,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-            
-            // Initialize layers
-            markersLayer = L.layerGroup().addTo(map);
-            
-            // Load initial data
-            updateMapData();
+            try {
+                console.log('Initializing map...');
+                
+                // Check if Leaflet is loaded
+                if (typeof L === 'undefined') {
+                    console.error('Leaflet library not loaded!');
+                    alert('Map library failed to load. Please refresh the page.');
+                    return;
+                }
+                
+                // Create map
+                map = L.map('map').setView([20.5937, 78.9629], 5); // Center on India
+                console.log('Map created successfully');
+                
+                // Add tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                console.log('Tile layer added successfully');
+                
+                // Initialize layers
+                markersLayer = L.layerGroup().addTo(map);
+                console.log('Markers layer initialized');
+                
+                // Load initial data
+                updateMapData();
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                alert('Failed to initialize map. Error: ' + error.message);
+            }
         }
         
         // Update map data based on filters
         function updateMapData() {
+            console.log('Updating map data...');
             showLoading(true);
             
             const filters = {
@@ -284,6 +351,8 @@
                 days_back: document.getElementById('timeRange').value
             };
             
+            console.log('Applied filters:', filters);
+            
             // Build query string
             const queryParams = new URLSearchParams();
             Object.keys(filters).forEach(key => {
@@ -292,22 +361,38 @@
                 }
             });
             
+            const apiUrl = `${API_ENDPOINTS.reports}?${queryParams}`;
+            console.log('Fetching from:', apiUrl);
+            
             // Fetch reports data
-            fetch(`${API_ENDPOINTS.reports}?${queryParams}`)
-                .then(response => response.json())
+            fetch(apiUrl)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Received data:', data);
                     if (data.success) {
                         currentReports = data.reports;
+                        console.log(`Loaded ${currentReports.length} reports`);
                         updateMarkers();
                         updateHeatmap();
+                        
+                        // Show success message
+                        if (typeof HeatmapUtils !== 'undefined') {
+                            HeatmapUtils.showNotification(`Loaded ${currentReports.length} reports`, 'success', 2000);
+                        }
                     } else {
-                        console.error('Error fetching reports:', data.error);
-                        alert('Error loading map data: ' + data.error);
+                        console.error('API error:', data.error);
+                        alert('Error loading map data: ' + (data.error || 'Unknown error'));
                     }
                 })
                 .catch(error => {
                     console.error('Fetch error:', error);
-                    alert('Error loading map data. Please try again.');
+                    alert('Error loading map data. Please check console for details.');
                 })
                 .finally(() => {
                     showLoading(false);

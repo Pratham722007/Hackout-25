@@ -33,6 +33,8 @@ def get_reports_api(request):
         status = request.GET.get('status', None)
         days_back = request.GET.get('days_back', 30)
         
+        print(f"API Request - Type: {report_type}, Severity: {severity}, Status: {status}, Days: {days_back}")
+        
         # Base queryset
         queryset = Report.objects.all()
         
@@ -61,17 +63,40 @@ def get_reports_api(request):
         # Convert to list of dictionaries
         reports_data = [report.to_dict() for report in queryset]
         
-        return JsonResponse({
+        print(f"API Response - Returning {len(reports_data)} reports")
+        
+        response = JsonResponse({
             'success': True,
             'reports': reports_data,
-            'count': len(reports_data)
+            'count': len(reports_data),
+            'filters_applied': {
+                'type': report_type,
+                'severity': severity,
+                'status': status,
+                'days_back': days_back
+            }
         })
         
+        # Add CORS headers for development
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type'
+        
+        return response
+        
     except Exception as e:
-        return JsonResponse({
+        print(f"API Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        response = JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': str(e),
+            'error_type': type(e).__name__
         }, status=500)
+        
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 
 def get_heatmap_data_api(request):
