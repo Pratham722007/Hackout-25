@@ -17,6 +17,8 @@ class EnvironmentalAnalysis(models.Model):
     
     title = models.CharField(max_length=200)
     location = models.CharField(max_length=200)
+    latitude = models.FloatField(null=True, blank=True, help_text="Latitude coordinate of the location")
+    longitude = models.FloatField(null=True, blank=True, help_text="Longitude coordinate of the location")
     description = models.TextField(blank=True, help_text="Additional details about the environmental report")
     image = models.ImageField(upload_to='environmental_images/', null=True, blank=True)
     risk_level = models.CharField(max_length=10, choices=RISK_CHOICES, default='low')

@@ -33,10 +33,45 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
-                        {{ form.location }}
+                        <div class="input-group">
+                            {{ form.location }}
+                            <button type="button" class="btn btn-outline-secondary" id="getCoordinatesBtn">
+                                <i class="fas fa-map-marker-alt me-1"></i>Get Coordinates
+                            </button>
+                        </div>
                         {% if form.location.errors %}
                             <div class="text-danger small mt-1">{{ form.location.errors.0 }}</div>
                         {% endif %}
+                        
+                        <!-- Coordinates Display -->
+                        <div id="coordinatesDisplay" class="mt-2" style="display: none;">
+                            <div class="alert alert-info mb-0 py-2">
+                                <i class="fas fa-globe me-2"></i>
+                                <strong>Coordinates:</strong> <span id="coordinatesText"></span>
+                                <br>
+                                <small class="text-muted" id="locationDisplayName"></small>
+                            </div>
+                        </div>
+                        
+                        <!-- Loading indicator -->
+                        <div id="loadingCoordinates" class="mt-2" style="display: none;">
+                            <div class="alert alert-light mb-0 py-2">
+                                <i class="fas fa-spinner fa-spin me-2"></i>
+                                Looking up coordinates...
+                            </div>
+                        </div>
+                        
+                        <!-- Error display -->
+                        <div id="coordinatesError" class="mt-2" style="display: none;">
+                            <div class="alert alert-warning mb-0 py-2">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span id="errorText"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden fields for coordinates -->
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
                     </div>
                 </div>
 
@@ -265,5 +300,96 @@ locationInput.addEventListener('input', checkFormValid);
 
 // Initial check
 checkFormValid();
+
+// Coordinate lookup functionality
+const getCoordinatesBtn = document.getElementById('getCoordinatesBtn');
+const coordinatesDisplay = document.getElementById('coordinatesDisplay');
+const loadingCoordinates = document.getElementById('loadingCoordinates');
+const coordinatesError = document.getElementById('coordinatesError');
+const coordinatesText = document.getElementById('coordinatesText');
+const locationDisplayName = document.getElementById('locationDisplayName');
+const errorText = document.getElementById('errorText');
+const latitudeInput = document.getElementById('latitude');
+const longitudeInput = document.getElementById('longitude');
+
+getCoordinatesBtn.addEventListener('click', function() {
+    const location = locationInput.value.trim();
+    
+    if (!location) {
+        showError('Please enter a location first.');
+        return;
+    }
+    
+    // Show loading state
+    showLoading();
+    
+    // Make AJAX request to get coordinates
+    fetch(`/api/coordinates/?location=${encodeURIComponent(location)}`)
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            
+            if (data.success) {
+                // Display coordinates
+                coordinatesText.textContent = data.coordinates_text;
+                locationDisplayName.textContent = data.display_name;
+                
+                // Store coordinates in hidden fields
+                latitudeInput.value = data.latitude;
+                longitudeInput.value = data.longitude;
+                
+                // Show coordinates display
+                coordinatesDisplay.style.display = 'block';
+                coordinatesError.style.display = 'none';
+            } else {
+                showError(data.error || 'Unable to find coordinates for this location.');
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            console.error('Error:', error);
+            showError('Network error. Please check your connection and try again.');
+        });
+});
+
+// Auto-lookup coordinates when location changes (with debounce)
+let locationTimeout;
+locationInput.addEventListener('input', function() {
+    // Clear previous timeout
+    clearTimeout(locationTimeout);
+    
+    // Hide previous results
+    coordinatesDisplay.style.display = 'none';
+    coordinatesError.style.display = 'none';
+    latitudeInput.value = '';
+    longitudeInput.value = '';
+    
+    const location = this.value.trim();
+    if (location.length < 3) return; // Don't search for very short inputs
+    
+    // Set timeout for auto-lookup (2 seconds after user stops typing)
+    locationTimeout = setTimeout(() => {
+        getCoordinatesBtn.click();
+    }, 2000);
+});
+
+function showLoading() {
+    loadingCoordinates.style.display = 'block';
+    coordinatesDisplay.style.display = 'none';
+    coordinatesError.style.display = 'none';
+    getCoordinatesBtn.disabled = true;
+}
+
+function hideLoading() {
+    loadingCoordinates.style.display = 'none';
+    getCoordinatesBtn.disabled = false;
+}
+
+function showError(message) {
+    errorText.textContent = message;
+    coordinatesError.style.display = 'block';
+    coordinatesDisplay.style.display = 'none';
+}
+
 </script>
 {% endblock %}
