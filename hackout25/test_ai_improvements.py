@@ -21,6 +21,11 @@ import numpy as np
 class MockAnalyzer(EnvironmentalAnalyzer):
     """Mock version of analyzer for testing without images"""
     
+    def __init__(self):
+        super().__init__()
+        # Ensure model loading is called to initialize environmental classes
+        self._ensure_model_loaded()
+    
     def preprocess_image(self, image_path):
         """Mock preprocessing - return dummy array"""
         return np.random.rand(1, 224, 224, 3)
