@@ -72,8 +72,12 @@
                         {% endif %}
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">
-                                <i class="fas fa-map-marker-alt me-1"></i>{{ analysis.location }} • 
-                                {{ analysis.created_at|date:"M d, Y" }}
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ analysis.location }}
+                                {% if analysis.latitude and analysis.longitude %}
+                                    <br>
+                                    <i class="fas fa-globe me-1"></i>{{ analysis.latitude|floatformat:6 }}, {{ analysis.longitude|floatformat:6 }}
+                                {% endif %}
+                                • {{ analysis.created_at|date:"M d, Y" }}
                             </small>
                             <div class="d-flex align-items-center">
                                 <div class="progress me-2" style="width: 60px; height: 6px;">

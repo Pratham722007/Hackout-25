@@ -3,8 +3,10 @@ from django.http import JsonResponse
 from .models import EnvironmentalAnalysis
 from .forms import EnvironmentalAnalysisForm
 from .ai_model import environmental_analyzer
+from .geocoding import geocoding_service
 import re
 import os
+import json
 
 def dashboard_view(request):
     analyses = EnvironmentalAnalysis.objects.all()[:10]  # Recent 10 analyses
@@ -29,6 +31,20 @@ def new_analysis_view(request):
         form = EnvironmentalAnalysisForm(request.POST, request.FILES)
         if form.is_valid():
             analysis = form.save(commit=False)
+            
+            # Get coordinates from POST data if available
+            latitude = request.POST.get('latitude')
+            longitude = request.POST.get('longitude')
+            if latitude and longitude:
+                try:
+                    analysis.latitude = float(latitude)
+                    analysis.longitude = float(longitude)
+                except ValueError:
+                    # If coordinates are invalid, try to get them from location
+                    coord_result = geocoding_service.get_coordinates(analysis.location)
+                    if coord_result:
+                        analysis.latitude = coord_result['latitude']
+                        analysis.longitude = coord_result['longitude']
             
             # Use AI model for image analysis if image is provided
             if analysis.image:
@@ -130,3 +146,43 @@ def calculate_confidence(title, location):
         score += 10
     
     return min(score, 100)  # Cap at 100
+
+def get_coordinates(request):
+    """AJAX view to get coordinates for a location"""
+    if request.method == 'GET':
+        location = request.GET.get('location', '').strip()
+        
+        if not location:
+            return JsonResponse({
+                'success': False,
+                'error': 'Location parameter is required'
+            })
+        
+        try:
+            # Get coordinates from geocoding service
+            result = geocoding_service.get_coordinates(location)
+            
+            if result:
+                return JsonResponse({
+                    'success': True,
+                    'latitude': result['latitude'],
+                    'longitude': result['longitude'],
+                    'display_name': result['display_name'],
+                    'coordinates_text': f"{result['latitude']:.6f}, {result['longitude']:.6f}"
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Location not found. Please check the spelling or try a more specific location.'
+                })
+                
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Error retrieving coordinates: {str(e)}'
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request method'
+    })
