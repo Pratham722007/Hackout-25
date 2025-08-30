@@ -23,6 +23,13 @@
             <div class="text-muted">
                 <i class="fas fa-map-marker-alt me-1"></i>{{ report.location }}
                 <span class="mx-2">•</span>
+                <i class="fas fa-user me-1"></i>
+                {% if report.created_by %}
+                    {{ report.created_by.username }}
+                {% else %}
+                    Anonymous User
+                {% endif %}
+                <span class="mx-2">•</span>
                 <i class="fas fa-clock me-1"></i>{{ report.created_at|date:"F d, Y \a\t g:i A" }}
             </div>
         </div>
