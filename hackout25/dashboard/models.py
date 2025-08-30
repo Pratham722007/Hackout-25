@@ -27,6 +27,10 @@ class EnvironmentalAnalysis(models.Model):
     confidence = models.IntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
     
+    # User tracking for achievements
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_analyses')
+    validated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='validated_analyses')
+    
     class Meta:
         ordering = ['-created_at']
         indexes = [

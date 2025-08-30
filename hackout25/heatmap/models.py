@@ -1,6 +1,7 @@
 from django.db import models
 from decimal import Decimal
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 
 class Report(models.Model):
@@ -59,6 +60,10 @@ class Report(models.Model):
     confidence_score = models.FloatField(default=0.0, help_text="AI confidence score (0-1)")
     verified = models.BooleanField(default=False)
     verification_notes = models.TextField(blank=True, null=True)
+    
+    # User tracking for achievements
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_reports')
+    validated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='validated_reports')
     
     class Meta:
         ordering = ['-created_at']

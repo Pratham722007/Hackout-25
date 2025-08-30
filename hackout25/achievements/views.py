@@ -11,6 +11,7 @@ from datetime import timedelta
 from .models import Achievement, UserAchievement, UserStats, AchievementNotification, Leaderboard
 from .services import AchievementService
 
+@login_required
 def achievements_dashboard(request):
     """Main achievements dashboard"""
     try:
@@ -173,11 +174,17 @@ def leaderboard(request):
     return render(request, 'achievements/leaderboard.html', context)
 
 
-@login_required
 @require_http_methods(["GET"])
 def user_progress_api(request):
     """API endpoint to get user progress data"""
     try:
+        # Check if user is authenticated
+        if not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False,
+                'error': 'Authentication required'
+            }, status=401)
+        
         progress_summary = AchievementService.get_user_progress_summary(request.user)
         
         if progress_summary:
@@ -227,11 +234,19 @@ def user_progress_api(request):
         }, status=500)
 
 
-@login_required
 @require_http_methods(["GET"])
 def notifications_api(request):
     """API endpoint to get achievement notifications"""
     try:
+        # Check if user is authenticated
+        if not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False,
+                'error': 'Authentication required',
+                'notifications': [],
+                'count': 0
+            }, status=401)
+        
         notifications = AchievementService.get_unread_notifications(request.user)
         
         notifications_data = []
@@ -287,11 +302,17 @@ def mark_notifications_read_api(request):
         }, status=500)
 
 
-@login_required
 @require_http_methods(["POST"])
 def track_action_api(request):
     """API endpoint to manually track user actions"""
     try:
+        # Check if user is authenticated
+        if not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False,
+                'error': 'Authentication required'
+            }, status=401)
+        
         action_type = request.POST.get('action_type')
         
         if action_type == 'map_view':

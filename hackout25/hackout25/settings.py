@@ -203,3 +203,6 @@ EMAIL_BACKEND = 'dashboard.backends.simple_console_email.SimpleConsoleEmailBacke
 
 DEFAULT_FROM_EMAIL = 'EcoValidate <noreply@ecovalidate.com>'
 SITE_URL = 'http://localhost:8000'  # Update for production
+
+LOGIN_URL = '/login/'   # or wherever your login view actually is
+

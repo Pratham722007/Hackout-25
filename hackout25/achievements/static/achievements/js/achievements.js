@@ -3,11 +3,11 @@
 class AchievementManager {
     constructor() {
         this.apiEndpoints = {
-            progress: '/achievements/api/progress/',
-            notifications: '/achievements/api/notifications/',
-            markRead: '/achievements/api/notifications/read/',
-            track: '/achievements/api/track/',
-            leaderboard: '/achievements/api/leaderboard/'
+            progress: '/achievements_dashboard/api/progress/',
+            notifications: '/achievements_dashboard/api/notifications/',
+            markRead: '/achievements_dashboard/api/notifications/read/',
+            track: '/achievements_dashboard/api/track/',
+            leaderboard: '/achievements_dashboard/api/leaderboard/'
         };
         
         this.notificationQueue = [];
@@ -71,18 +71,45 @@ class AchievementManager {
             
             if (response.ok) {
                 console.log(`Action tracked: ${actionType}`);
+            } else if (response.status === 401 || response.status === 403) {
+                // Silently ignore authentication errors for tracking
+                console.log('User not authenticated for action tracking');
             }
         } catch (error) {
-            console.error('Error tracking action:', error);
+            // Only log non-authentication errors
+            if (!error.message.includes('status: 401') && !error.message.includes('status: 403')) {
+                console.error('Error tracking action:', error);
+            }
         }
     }
     
     async checkNotifications() {
         try {
-            const response = await fetch(this.apiEndpoints.notifications);
+            const response = await fetch(this.apiEndpoints.notifications, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            
+            // Check if response is ok
+            if (!response.ok) {
+                if (response.status === 403 || response.status === 401) {
+                    console.log('User not authenticated for notifications');
+                    return; // Silently fail for unauthenticated users
+                }
+                if (response.status === 404) {
+                    console.log('Notifications API endpoint not found');
+                    return; // Silently fail for missing endpoints
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
             
-            if (data.success && data.notifications.length > 0) {
+            if (data.success && data.notifications && data.notifications.length > 0) {
                 // Add new notifications to queue
                 data.notifications.forEach(notification => {
                     if (!notification.is_displayed) {
@@ -94,7 +121,11 @@ class AchievementManager {
                 this.processNotificationQueue();
             }
         } catch (error) {
-            console.error('Error checking notifications:', error);
+            // Only log errors that aren't authentication related
+            if (!error.message.includes('status: 401') && !error.message.includes('status: 403')) {
+                console.error('Error checking notifications:', error);
+            }
+            // Don't throw the error to prevent breaking other functionality
         }
     }
     
@@ -265,8 +296,8 @@ class AchievementManager {
             }, 150);
             
             // Navigate to achievement detail (if route exists)
-            if (window.location.pathname.includes('/achievements/')) {
-                window.location.href = `/achievements/achievement/${achievementId}/`;
+            if (window.location.pathname.includes('/achievements_dashboard/')) {
+                window.location.href = `/achievements_dashboard/achievement/${achievementId}/`;
             }
         }
     }
@@ -323,7 +354,7 @@ class AchievementManager {
     // Widget methods for embedding in other pages
     static async createProgressWidget(containerId) {
         try {
-            const response = await fetch('/achievements/api/progress/');
+            const response = await fetch('/achievements_dashboard/api/progress/');
             const data = await response.json();
             
             if (data.success) {
@@ -378,7 +409,7 @@ class AchievementManager {
     
     static async createMiniLeaderboard(containerId, type = 'points', limit = 5) {
         try {
-            const response = await fetch(`/achievements/api/leaderboard/?type=${type}&limit=${limit}`);
+            const response = await fetch(`/achievements_dashboard/api/leaderboard/?type=${type}&limit=${limit}`);
             const data = await response.json();
             
             if (data.success) {
@@ -421,7 +452,7 @@ class AchievementManager {
         html += `
                 </div>
                 <div class="leaderboard-footer">
-                    <a href="/achievements/leaderboard/" class="view-full-link">View Full Leaderboard →</a>
+                    <a href="/achievements_dashboard/leaderboard/" class="view-full-link">View Full Leaderboard →</a>
                 </div>
             </div>
         `;

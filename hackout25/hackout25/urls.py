@@ -19,6 +19,20 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import render
+from django.http import FileResponse
+from django.views.decorators.cache import cache_control
+import os
+
+@cache_control(max_age=86400)  # Cache for 24 hours
+def favicon_view(request):
+    """Serve favicon.ico"""
+    favicon_path = os.path.join(settings.BASE_DIR, 'authentication', 'templates', 'favicon.ico')
+    try:
+        return FileResponse(open(favicon_path, 'rb'), content_type='image/x-icon')
+    except FileNotFoundError:
+        # Return a simple HTTP 404 if favicon not found
+        from django.http import HttpResponseNotFound
+        return HttpResponseNotFound("Favicon not found")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +41,7 @@ urlpatterns = [
     path('news/', include('news.urls')),
     path('heatmap/', include('heatmap.urls')),
     path('achievements_dashboard/', include('achievements.urls')),
+    path('favicon.ico', favicon_view, name='favicon'),
 ]
 
 # Serve static files during development
