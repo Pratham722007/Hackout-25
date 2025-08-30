@@ -190,7 +190,9 @@ LOGGING = {
 }
 
 # Email configuration for development
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Prints emails to console in development
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Default console backend (shows encoded content)
+# EMAIL_BACKEND = 'dashboard.backends.readable_console_email.ReadableConsoleEmailBackend'  # Custom readable email backend
+EMAIL_BACKEND = 'dashboard.backends.simple_console_email.SimpleConsoleEmailBackend'  # Simple text-only email backend
 # For production, use:
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.your-email-provider.com'
