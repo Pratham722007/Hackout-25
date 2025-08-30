@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-krl0vc=!x617k8i%vi+0c8i6#29^h(wz6lezg+)1^geh-6nvxk
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://hackout-25.onrender.com']
 
 
 # Application definition
