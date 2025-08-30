@@ -11,7 +11,7 @@ from datetime import timedelta
 from .models import Achievement, UserAchievement, UserStats, AchievementNotification, Leaderboard
 from .services import AchievementService
 
-@login_required
+
 def achievements_dashboard(request):
     """Main achievements dashboard"""
     try:

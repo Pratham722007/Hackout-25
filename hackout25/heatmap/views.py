@@ -7,6 +7,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 import json
 from .models import Report, ReportStatistics
+from achievements.service_modules.clerk_achievements import AchievementTracker
 
 
 def heatmap_view(request):
@@ -232,6 +233,14 @@ def create_report_api(request):
             reporter_phone=data.get('reporter_phone', ''),
             created_by=request.user if request.user.is_authenticated else None,
         )
+        
+        # Track achievement if user is authenticated
+        if request.user.is_authenticated:
+            try:
+                AchievementTracker.track_report_creation(request.user, report)
+            except Exception as e:
+                # Don't fail report creation if achievement tracking fails
+                print(f"Achievement tracking failed: {e}")
         
         return JsonResponse({
             'success': True,
