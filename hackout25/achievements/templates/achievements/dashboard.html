@@ -1,0 +1,184 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - Environmental Dashboard{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'achievements/css/achievements.css' %}" />
+{% endblock %}
+
+{% block content %}
+    <div class="achievements-content">
+        <!-- User Progress Header -->
+        <div class="achievements-header fade-in">
+            <div class="user-level">
+                <div class="level-badge">
+                    {{ progress_summary.stats.level }}
+                </div>
+                <div class="level-info">
+                    <h1>Level {{ progress_summary.stats.level }}</h1>
+                    <p class="level-subtitle">{{ progress_summary.stats.total_points }} total points • Rank #{{ progress_summary.user_rank }}</p>
+                </div>
+            </div>
+            
+            <div class="progress-stats">
+                <div class="stat-item">
+                    <span class="stat-value">{{ progress_summary.unlocked_count }}</span>
+                    <span class="stat-label">Achievements</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ progress_summary.stats.streak_current }}</span>
+                    <span class="stat-label">Day Streak 🔥</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ progress_summary.stats.reports_created }}</span>
+                    <span class="stat-label">Reports Created</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ progress_summary.completion_percentage }}%</span>
+                    <span class="stat-label">Completion</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Achievements -->
+        {% if progress_summary.recent_achievements %}
+        <div class="content-card slide-in-up">
+            <h5>🎉 Recent Achievements</h5>
+            <div class="achievement-grid">
+                {% for user_achievement in progress_summary.recent_achievements %}
+                <div class="achievement-card unlocked" data-achievement-id="{{ user_achievement.achievement.id }}">
+                    <div class="achievement-header">
+                        <div class="achievement-icon unlocked">{{ user_achievement.achievement.icon }}</div>
+                        <div class="achievement-info">
+                            <h4>{{ user_achievement.achievement.name }}</h4>
+                            <span class="achievement-tier tier-{{ user_achievement.achievement.tier }}">{{ user_achievement.achievement.get_tier_display }}</span>
+                        </div>
+                    </div>
+                    <p class="achievement-description">{{ user_achievement.achievement.description }}</p>
+                    <div class="achievement-rewards">
+                        <span class="points-reward">🏆 +{{ user_achievement.achievement.points }} points</span>
+                        <span class="unlock-status unlocked">✅ Unlocked!</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Achievement Categories -->
+        <div class="achievement-categories">
+            {% for category_key, category_data in achievements_by_category.items %}
+            {% if category_data.achievements %}
+            <div class="category-section slide-in-up">
+                <div class="category-header">
+                    <h3>{{ category_data.name }}</h3>
+                    <div class="category-progress">
+                        {% with unlocked=category_data.achievements|length %}
+                        {% with total=category_data.achievements|length %}
+                        <div class="category-progress-text">
+                            {{ category_data.achievements|length|add:0 }} achievements
+                        </div>
+                        <div class="category-progress-bar">
+                            <div class="category-progress-fill" 
+                                 style="width: {% widthratio unlocked total 100 %}%"></div>
+                        </div>
+                        {% endwith %}
+                        {% endwith %}
+                    </div>
+                </div>
+                
+                <div class="achievement-grid">
+                    {% for user_achievement in category_data.achievements %}
+                    <div class="achievement-card {% if user_achievement.is_unlocked %}unlocked{% else %}locked{% endif %}" 
+                         data-achievement-id="{{ user_achievement.achievement.id }}">
+                        <div class="achievement-header">
+                            <div class="achievement-icon {% if user_achievement.is_unlocked %}unlocked{% endif %}">
+                                {{ user_achievement.achievement.icon }}
+                            </div>
+                            <div class="achievement-info">
+                                <h4>{{ user_achievement.achievement.name }}</h4>
+                                <span class="achievement-tier tier-{{ user_achievement.achievement.tier }}">
+                                    {{ user_achievement.achievement.get_tier_display }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <p class="achievement-description">{{ user_achievement.achievement.description }}</p>
+                        
+                        {% if not user_achievement.is_unlocked %}
+                        <div class="achievement-progress">
+                            <div class="progress-info">
+                                <span class="progress-text">
+                                    {{ user_achievement.current_progress }} / {{ user_achievement.achievement.target_value }}
+                                </span>
+                                <span class="progress-percentage">{{ user_achievement.progress_percentage|floatformat:0 }}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ user_achievement.progress_percentage }}%"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="achievement-rewards">
+                            <span class="points-reward">🏆 {{ user_achievement.achievement.points }} points</span>
+                            <span class="unlock-status {% if user_achievement.is_unlocked %}unlocked{% else %}locked{% endif %}">
+                                {% if user_achievement.is_unlocked %}✅ Unlocked!{% else %}🔒 Locked{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="content-card">
+            <h5>🚀 Quick Actions</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <a href="{% url 'heatmap' %}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-map"></i> View Heatmap
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'achievements_leaderboard' %}" class="btn btn-secondary w-100 mb-2">
+                        <i class="fas fa-trophy"></i> Leaderboard
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'new_analysis' %}" class="btn btn-success w-100 mb-2">
+                        <i class="fas fa-plus"></i> Create Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'achievements/js/achievements.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add staggered animation to achievement cards
+            const cards = document.querySelectorAll('.achievement-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('fade-in');
+            });
+            
+            // Update progress bars with animation
+            setTimeout(() => {
+                document.querySelectorAll('.progress-fill').forEach(fill => {
+                    const width = fill.style.width;
+                    fill.style.width = '0%';
+                    setTimeout(() => {
+                        fill.style.width = width;
+                    }, 200);
+                });
+            }, 500);
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,502 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - Environmental Dashboard{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="{% static 'heatmap/css/heatmap.css' %}" />
+    <style>
+        /* Override main content styles for fullscreen map */
+        .main-content {
+            padding: 0 !important;
+            height: calc(100vh - 40px);
+            overflow: hidden;
+        }
+        
+        .heatmap-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .heatmap-controls {
+            background: white;
+            padding: 15px 20px;
+            border-bottom: 2px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            flex-shrink: 0;
+        }
+        
+        .controls-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+        
+        .control-group select, .control-group input {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 140px;
+            background: white;
+        }
+        
+        .control-group select:focus, .control-group input:focus {
+            outline: none;
+            border-color: #16a085;
+            box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #16a085, #138f7a);
+            color: white;
+            box-shadow: 0 4px 8px rgba(22, 160, 133, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #138f7a, #117a65);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(22, 160, 133, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #545b62);
+            color: white;
+            box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #545b62, #383d41);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(108, 117, 125, 0.4);
+        }
+        
+        #map {
+            flex: 1;
+            min-height: 500px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .map-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px 35px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #16a085;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .report-popup {
+            max-width: 320px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .report-popup h4 {
+            margin: 0 0 12px 0;
+            color: #212529;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .report-popup .meta {
+            font-size: 13px;
+            color: #6c757d;
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+        
+        .report-popup .description {
+            margin: 12px 0;
+            font-size: 14px;
+            color: #495057;
+            line-height: 1.5;
+        }
+        
+        .severity-badge, .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 6px;
+            margin-bottom: 4px;
+        }
+        
+        .severity-low { background: linear-gradient(135deg, #d4edda, #c3e6cb); color: #155724; border: 1px solid #c3e6cb; }
+        .severity-medium { background: linear-gradient(135deg, #fff3cd, #ffeaa7); color: #856404; border: 1px solid #ffeaa7; }
+        .severity-high { background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; border: 1px solid #f5c6cb; }
+        .severity-critical { background: linear-gradient(135deg, #f5c6cb, #f1b0b7); color: #491217; border: 1px solid #f1b0b7; }
+        
+        .status-pending { background: linear-gradient(135deg, #e2e3e5, #d6d8db); color: #383d41; border: 1px solid #d6d8db; }
+        .status-validated { background: linear-gradient(135deg, #d4edda, #c3e6cb); color: #155724; border: 1px solid #c3e6cb; }
+        .status-rejected { background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; border: 1px solid #f5c6cb; }
+        .status-under_review { background: linear-gradient(135deg, #d1ecf1, #bee5eb); color: #0c5460; border: 1px solid #bee5eb; }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .controls-row {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            
+            .control-group {
+                flex-direction: column;
+                gap: 5px;
+                align-items: stretch;
+            }
+            
+            .btn-group {
+                margin-left: 0;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .heatmap-controls {
+                padding: 10px 15px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="heatmap-container">
+        <!-- Controls Panel -->
+        <div class="heatmap-controls">
+            <div class="controls-row">
+                <div class="control-group">
+                    <label for="reportType">Type:</label>
+                    <select id="reportType">
+                        <option value="all">All Types</option>
+                        {% for type_key, type_label in report_types %}
+                            <option value="{{ type_key }}">{{ type_label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="severityLevel">Severity:</label>
+                    <select id="severityLevel">
+                        <option value="all">All Severities</option>
+                        {% for severity_key, severity_label in severity_levels %}
+                            <option value="{{ severity_key }}">{{ severity_label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="statusFilter">Status:</label>
+                    <select id="statusFilter">
+                        <option value="all">All Statuses</option>
+                        {% for status_key, status_label in status_choices %}
+                            <option value="{{ status_key }}">{{ status_label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="timeRange">Time Range:</label>
+                    <select id="timeRange">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="365">Last year</option>
+                        <option value="0">All time</option>
+                    </select>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="updateMap" class="btn btn-primary">Update Map</button>
+                    <button id="toggleHeatmap" class="btn btn-secondary">Toggle Heatmap</button>
+                    <button id="resetView" class="btn btn-secondary">Reset View</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Map Container -->
+        <div style="flex: 1; position: relative;">
+            <div id="map"></div>
+            <div id="mapLoading" class="map-loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                Loading map data...
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="{% static 'achievements/js/achievements.js' %}"></script>
+    <script>
+        // API endpoints
+        const API_ENDPOINTS = {
+            reports: '{% url "heatmap_reports_api" %}',
+            heatmapData: '{% url "heatmap_data_api" %}',
+            statistics: '{% url "heatmap_statistics_api" %}',
+            createReport: '{% url "create_report_api" %}'
+        };
+        
+        // Global variables
+        let map;
+        let markersLayer;
+        let heatmapLayer;
+        let currentReports = [];
+        let showHeatmap = true;
+        
+        // Initialize map
+        function initializeMap() {
+            try {
+                console.log('Initializing map...');
+                
+                // Check if Leaflet is loaded
+                if (typeof L === 'undefined') {
+                    console.error('Leaflet library not loaded!');
+                    alert('Map library failed to load. Please refresh the page.');
+                    return;
+                }
+                
+                // Create map
+                map = L.map('map').setView([20.5937, 78.9629], 5); // Center on India
+                console.log('Map created successfully');
+                
+                // Add tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                console.log('Tile layer added successfully');
+                
+                // Initialize layers
+                markersLayer = L.layerGroup().addTo(map);
+                console.log('Markers layer initialized');
+                
+                // Load initial data
+                updateMapData();
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                alert('Failed to initialize map. Error: ' + error.message);
+            }
+        }
+        
+        // Update map data based on filters
+        function updateMapData() {
+            console.log('Updating map data...');
+            showLoading(true);
+            
+            const filters = {
+                type: document.getElementById('reportType').value,
+                severity: document.getElementById('severityLevel').value,
+                status: document.getElementById('statusFilter').value,
+                days_back: document.getElementById('timeRange').value
+            };
+            
+            console.log('Applied filters:', filters);
+            
+            // Build query string
+            const queryParams = new URLSearchParams();
+            Object.keys(filters).forEach(key => {
+                if (filters[key] && filters[key] !== 'all') {
+                    queryParams.append(key, filters[key]);
+                }
+            });
+            
+            const apiUrl = `${API_ENDPOINTS.reports}?${queryParams}`;
+            console.log('Fetching from:', apiUrl);
+            
+            // Fetch reports data
+            fetch(apiUrl)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received data:', data);
+                    if (data.success) {
+                        currentReports = data.reports;
+                        console.log(`Loaded ${currentReports.length} reports`);
+                        updateMarkers();
+                        updateHeatmap();
+                        
+                        // Show success message
+                        if (typeof HeatmapUtils !== 'undefined') {
+                            HeatmapUtils.showNotification(`Loaded ${currentReports.length} reports`, 'success', 2000);
+                        }
+                    } else {
+                        console.error('API error:', data.error);
+                        alert('Error loading map data: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    alert('Error loading map data. Please check console for details.');
+                })
+                .finally(() => {
+                    showLoading(false);
+                });
+        }
+        
+        // Update markers layer
+        function updateMarkers() {
+            markersLayer.clearLayers();
+            
+            currentReports.forEach(report => {
+                const marker = L.marker([report.latitude, report.longitude])
+                    .bindPopup(createPopupContent(report));
+                
+                markersLayer.addLayer(marker);
+            });
+        }
+        
+        // Update heatmap layer
+        function updateHeatmap() {
+            if (heatmapLayer) {
+                map.removeLayer(heatmapLayer);
+            }
+            
+            if (showHeatmap && currentReports.length > 0) {
+                const heatData = currentReports.map(report => {
+                    let intensity = 0.5; // Base intensity
+                    
+                    // Adjust intensity based on severity
+                    switch (report.severity) {
+                        case 'low': intensity = 0.3; break;
+                        case 'medium': intensity = 0.5; break;
+                        case 'high': intensity = 0.7; break;
+                        case 'critical': intensity = 1.0; break;
+                    }
+                    
+                    return [report.latitude, report.longitude, intensity];
+                });
+                
+                heatmapLayer = L.heatLayer(heatData, {
+                    radius: 25,
+                    blur: 15,
+                    maxZoom: 17,
+                    gradient: {
+                        0.0: 'blue',
+                        0.3: 'cyan',
+                        0.5: 'lime',
+                        0.7: 'yellow',
+                        1.0: 'red'
+                    }
+                }).addTo(map);
+            }
+        }
+        
+        // Create popup content for markers
+        function createPopupContent(report) {
+            return `
+                <div class="report-popup">
+                    <h4>${report.title}</h4>
+                    <div class="meta">
+                        <span class="severity-badge severity-${report.severity}">${report.severity_display}</span>
+                        <span class="status-badge status-${report.status}">${report.status_display}</span>
+                    </div>
+                    <div class="meta">
+                        <strong>Type:</strong> ${report.report_type_display}<br>
+                        <strong>Location:</strong> ${report.location_name || 'Unknown'}<br>
+                        <strong>Date:</strong> ${new Date(report.created_at).toLocaleDateString()}
+                    </div>
+                    <div class="description">
+                        ${report.description.substring(0, 150)}${report.description.length > 150 ? '...' : ''}
+                    </div>
+                    ${report.reporter_name ? `<div class="meta"><strong>Reporter:</strong> ${report.reporter_name}</div>` : ''}
+                </div>
+            `;
+        }
+        
+        // Toggle heatmap visibility
+        function toggleHeatmap() {
+            showHeatmap = !showHeatmap;
+            updateHeatmap();
+            
+            const button = document.getElementById('toggleHeatmap');
+            button.textContent = showHeatmap ? 'Hide Heatmap' : 'Show Heatmap';
+        }
+        
+        // Reset map view
+        function resetView() {
+            map.setView([20.5937, 78.9629], 5);
+        }
+        
+        // Show/hide loading indicator
+        function showLoading(show) {
+            const loading = document.getElementById('mapLoading');
+            loading.style.display = show ? 'block' : 'none';
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMap();
+            
+            document.getElementById('updateMap').addEventListener('click', updateMapData);
+            document.getElementById('toggleHeatmap').addEventListener('click', toggleHeatmap);
+            document.getElementById('resetView').addEventListener('click', resetView);
+        });
+    </script>
+    <script src="{% static 'heatmap/js/heatmap.js' %}"></script>
+{% endblock %}

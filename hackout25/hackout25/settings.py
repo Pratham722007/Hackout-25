@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'authentication',
     'dashboard',
+    'heatmap',
+    'achievements',
     'news',
     'sms',
 ]
@@ -121,6 +123,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
+    BASE_DIR / 'authentication' / 'static',
+    BASE_DIR / 'heatmap' / 'static',
+    BASE_DIR / 'achievements' / 'static',
 ]
 
 # Media files
@@ -132,9 +137,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Static files configuration
-STATICFILES_DIRS = [
-    BASE_DIR / 'authentication' / 'static',
+# Template directories
+TEMPLATES[0]['DIRS'] = [
+    BASE_DIR / 'authentication' / 'templates',
+    BASE_DIR / 'dashboard' / 'templates',
+    BASE_DIR / 'heatmap' / 'templates',
+    BASE_DIR / 'achievements' / 'templates',
 ]
 
 # Template directory
