@@ -422,7 +422,7 @@ def reports_view(request):
     }
     
     # Get unique users who have created reports
-    users_with_reports = User.objects.filter(environmental_analyses__isnull=False).distinct().order_by('username')
+    users_with_reports = User.objects.filter(created_analyses__isnull=False).distinct().order_by('username')
     
     context = {
         'reports': page_obj,

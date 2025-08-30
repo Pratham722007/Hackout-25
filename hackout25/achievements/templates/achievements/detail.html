@@ -1,4 +1,4 @@
-{% extends 'dashboard/base.html' %}
+{% extends 'dashboard/dashboard_base.html' %}
 {% load static %}
 
 {% block title %}{{ page_title }} - Environmental Dashboard{% endblock %}
@@ -11,7 +11,7 @@
     <div class="achievements-content">
         <!-- Back Button -->
         <div class="mb-4">
-            <a href="{% url 'achievements_dashboard' %}" class="btn btn-outline-secondary">
+            <a href="{% url 'achievements:dashboard' %}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Back to Achievements
             </a>
         </div>
@@ -123,17 +123,17 @@
                                     <h6>Quick Actions:</h6>
                                     <div class="action-buttons">
                                         {% if achievement.action_type == 'report_count' or achievement.action_type == 'high_severity' or achievement.action_type == 'location_variety' or achievement.action_type == 'report_types' %}
-                                            <a href="{% url 'new_analysis' %}" class="btn btn-primary btn-sm">
+                                            <a href="{% url 'dashboard:new_analysis' %}" class="btn btn-primary btn-sm">
                                                 <i class="fas fa-plus me-1"></i>Create Report
                                             </a>
                                         {% endif %}
                                         {% if achievement.action_type == 'map_usage' %}
-                                            <a href="{% url 'heatmap' %}" class="btn btn-secondary btn-sm">
+                                            <a href="{% url 'dashboard:heatmap' %}" class="btn btn-secondary btn-sm">
                                                 <i class="fas fa-map me-1"></i>View Heatmap
                                             </a>
                                         {% endif %}
                                         {% if achievement.action_type == 'validation_count' %}
-                                            <a href="{% url 'reports' %}" class="btn btn-info btn-sm">
+                                            <a href="{% url 'dashboard:reports' %}" class="btn btn-info btn-sm">
                                                 <i class="fas fa-check me-1"></i>Validate Reports
                                             </a>
                                         {% endif %}
@@ -206,7 +206,7 @@
                 <!-- This is a placeholder for future enhancement -->
                 <div class="text-center text-muted py-4">
                     <p>Related achievements coming soon!</p>
-                    <a href="{% url 'achievements_dashboard' %}" class="btn btn-primary btn-sm">
+                    <a href="{% url 'achievements:dashboard' %}" class="btn btn-primary btn-sm">
                         <i class="fas fa-trophy me-1"></i>View All Achievements
                     </a>
                 </div>

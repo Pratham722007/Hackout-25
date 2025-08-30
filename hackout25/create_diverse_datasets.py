@@ -145,36 +145,47 @@ class DiverseDatasetGenerator:
         
         # Location coordinates for realistic geographical distribution
         self.coordinates = {
-            'Amazon Basin, Brazil': (19.0760, 72.8777),
-            'Great Barrier Reef, Australia': (28.7041, 77.1025),
-            'Sundarbans Mangrove, Bangladesh': (12.9716, 77.5946),
-            'Yellowstone National Park, USA': (13.0827, 80.2707),
-            'Madagascar Rainforest': (22.5726, 88.3639),
-            'Borneo Tropical Forest, Indonesia': (17.3850, 78.4867),
-            'Pacific Coast, California': (18.5204, 73.8567),
-            'Great Lakes Region, Michigan': (23.0225, 72.5714),
-            'Florida Everglades, USA': (21.1702, 72.8311),
-            'Mediterranean Coast, Spain': (26.9124, 75.7873),
-            'Coastal Queensland, Australia': (19.0760, 72.8777),
-            'Pacific Northwest, Canada': (28.7041, 77.1025),
-            'Central Park, New York': (12.9716, 77.5946),
-            'Golden Gate Park, San Francisco': (13.0827, 80.2707),
-            'Hyde Park, London': (22.5726, 88.3639),
-            'Stanley Park, Vancouver': (17.3850, 78.4867),
-            'Kruger National Park, South Africa': (18.5204, 73.8567),
-            'Banff National Park, Canada': (23.0225, 72.5714),
-            'Remote Forest Area, Oregon': (21.1702, 72.8311),
-            'Undisclosed Location, Private Land': (26.9124, 75.7873),
-            'Remote Island, Pacific Ocean': (19.0760, 72.8777),
-            'Mountain Region, Colorado': (28.7041, 77.1025),
-            'Desert Area, Nevada': (12.9716, 77.5946),
-            'Rural Wetlands, Louisiana': (13.0827, 80.2707),
-            'Yosemite National Park, USA': (22.5726, 88.3639),
-            'Galapagos Islands, Ecuador': (17.3850, 78.4867),
-            'Serengeti National Park, Tanzania': (18.5204, 73.8567),
-            'Costa Rica Cloud Forest': (23.0225, 72.5714),
-            'Norwegian Fjords': (21.1702, 72.8311),
-            'New Zealand Native Forest': (26.9124, 75.7873)
+            # North America
+            'Golden Gate Park, San Francisco': (37.769, -122.483),
+            'Central Park, New York': (40.785, -73.968),
+            'Stanley Park, Vancouver': (49.301, -123.141),
+            'Banff National Park, Canada': (51.178, -115.570),
+            'Pacific Northwest, Canada': (49.246, -123.116),
+            'Great Lakes Region, Michigan': (44.314, -85.602),
+            'Florida Everglades, USA': (25.286, -80.898),
+            'Yellowstone National Park, USA': (44.428, -110.588),
+            'Yosemite National Park, USA': (37.865, -119.538),
+            'Pacific Coast, California': (36.778, -121.797),
+            'Mountain Region, Colorado': (39.550, -105.782),
+            'Desert Area, Nevada': (39.161, -117.206),
+            'Rural Wetlands, Louisiana': (30.391, -92.329),
+            'Remote Forest Area, Oregon': (44.931, -123.029),
+            'Undisclosed Location, Private Land': (39.833, -98.583),  # Center of USA
+            
+            # South America  
+            'Amazon Basin, Brazil': (-3.465, -62.215),
+            'Galapagos Islands, Ecuador': (-0.953, -91.077),
+            'Costa Rica Cloud Forest': (10.262, -84.196),
+            
+            # Europe
+            'Hyde Park, London': (51.508, -0.165),
+            'Mediterranean Coast, Spain': (41.379, 2.147),
+            'Norwegian Fjords': (62.472, 6.149),
+            
+            # Africa
+            'Serengeti National Park, Tanzania': (-2.333, 34.833),
+            'Kruger National Park, South Africa': (-24.998, 31.554),
+            
+            # Asia
+            'Sundarbans Mangrove, Bangladesh': (21.950, 89.531),
+            'Borneo Tropical Forest, Indonesia': (-0.789, 113.921),
+            'Madagascar Rainforest': (-18.766, 46.869),
+            
+            # Australia & Oceania
+            'Great Barrier Reef, Australia': (-18.286, 147.700),
+            'Coastal Queensland, Australia': (-20.917, 142.702),
+            'New Zealand Native Forest': (-41.500, 172.834),
+            'Remote Island, Pacific Ocean': (-8.783, -124.508),  # Pacific Ocean
         }
 
     def generate_dashboard_reports(self, count_per_scenario=10):
