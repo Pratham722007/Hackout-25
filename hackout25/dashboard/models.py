@@ -28,6 +28,10 @@ class EnvironmentalAnalysis(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='environmental_analyses', null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     
+    # User tracking for achievements
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_analyses')
+    validated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='validated_analyses')
+    
     class Meta:
         ordering = ['-created_at']
         indexes = [

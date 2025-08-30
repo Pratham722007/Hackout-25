@@ -58,6 +58,64 @@ class AchievementService:
             logger.error(f"Error tracking report creation for user {user.username}: {e}")
     
     @staticmethod
+    def track_analysis_created(user, analysis):
+        """Track when user creates an environmental analysis"""
+        try:
+            with transaction.atomic():
+                stats = AchievementService.get_or_create_user_stats(user)
+                stats.reports_created += 1  # Count analyses as reports for achievements
+                stats.update_streak()
+                
+                # Add location variety if coordinates are available
+                if analysis.latitude and analysis.longitude:
+                    stats.add_location(analysis.latitude, analysis.longitude)
+                
+                # Map analysis risk levels to severity for achievement tracking
+                risk_to_severity = {
+                    'critical': 'critical',
+                    'high': 'high',
+                    'low': 'low'
+                }
+                severity = risk_to_severity.get(analysis.risk_level, 'medium')
+                
+                # Check for high severity analyses
+                if severity in ['high', 'critical']:
+                    stats.high_severity_found += 1
+                
+                # Add analysis type variety (treat risk level as type for variety)
+                analysis_type = f"analysis_{analysis.risk_level}"
+                stats.add_report_type(analysis_type)
+                
+                stats.save()
+                
+                # Check achievements
+                AchievementService.check_achievements_for_user(user, 'analysis_created')
+                
+        except Exception as e:
+            logger.error(f"Error tracking analysis creation for user {user.username}: {e}")
+    
+    @staticmethod
+    def track_analysis_validated(user, analysis):
+        """Track when user validates an environmental analysis"""
+        try:
+            with transaction.atomic():
+                stats = AchievementService.get_or_create_user_stats(user)
+                stats.reports_validated += 1
+                stats.update_streak()
+                
+                # Check if validation was quick (within 24 hours)
+                if analysis.created_at and timezone.now() - analysis.created_at <= timezone.timedelta(hours=24):
+                    stats.helpful_validations += 1
+                
+                stats.save()
+                
+                # Check achievements
+                AchievementService.check_achievements_for_user(user, 'analysis_validation')
+                
+        except Exception as e:
+            logger.error(f"Error tracking analysis validation for user {user.username}: {e}")
+    
+    @staticmethod
     def track_report_validated(user, report):
         """Track when user validates a report"""
         try:
@@ -246,6 +304,16 @@ class AchievementService:
                 'points': 25,
             },
             {
+                'name': 'Dedicated Reporter',
+                'description': 'Submit 10 environmental reports',
+                'category': 'reporter',
+                'tier': 'silver',
+                'action_type': 'report_count',
+                'target_value': 10,
+                'icon': '📋',
+                'points': 50,
+            },
+            {
                 'name': 'Eco Warrior',
                 'description': 'Submit 25 environmental reports',
                 'category': 'reporter',
@@ -254,6 +322,16 @@ class AchievementService:
                 'target_value': 25,
                 'icon': '🌳',
                 'points': 100,
+            },
+            {
+                'name': 'Environmental Champion',
+                'description': 'Submit 50 environmental reports',
+                'category': 'reporter',
+                'tier': 'gold',
+                'action_type': 'report_count',
+                'target_value': 50,
+                'icon': '🏆',
+                'points': 250,
             },
             {
                 'name': 'Environmental Guardian',
@@ -416,6 +494,50 @@ class AchievementService:
                 'target_value': 5,
                 'icon': '⚡',
                 'points': 75,
+            },
+            
+            # Milestone Achievements
+            {
+                'name': 'Getting Started',
+                'description': 'Submit 3 environmental reports',
+                'category': 'reporter',
+                'tier': 'bronze',
+                'action_type': 'report_count',
+                'target_value': 3,
+                'icon': '🌟',
+                'points': 15,
+            },
+            {
+                'name': 'Super Reporter',
+                'description': 'Submit 75 environmental reports',
+                'category': 'reporter',
+                'tier': 'platinum',
+                'action_type': 'report_count',
+                'target_value': 75,
+                'icon': '⭐',
+                'points': 400,
+            },
+            {
+                'name': 'Environmental Legend',
+                'description': 'Submit 200 environmental reports',
+                'category': 'reporter',
+                'tier': 'legendary',
+                'action_type': 'report_count',
+                'target_value': 200,
+                'icon': '🌟',
+                'points': 1000,
+            },
+            
+            # Special milestone achievements
+            {
+                'name': 'Marathon Reporter',
+                'description': 'Submit 500 environmental reports',
+                'category': 'reporter',
+                'tier': 'legendary',
+                'action_type': 'report_count',
+                'target_value': 500,
+                'icon': '🏃‍♂️',
+                'points': 2500,
             },
         ]
         

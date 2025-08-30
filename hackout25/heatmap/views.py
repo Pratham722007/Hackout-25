@@ -230,6 +230,7 @@ def create_report_api(request):
             reporter_name=data.get('reporter_name', ''),
             reporter_email=data.get('reporter_email', ''),
             reporter_phone=data.get('reporter_phone', ''),
+            created_by=request.user if request.user.is_authenticated else None,
         )
         
         return JsonResponse({
