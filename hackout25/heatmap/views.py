@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import json
 from dashboard.models import EnvironmentalAnalysis
 from .models import Report, ReportStatistics
+from achievements.service_modules.clerk_achievements import AchievementTracker
 
 
 def heatmap_view(request):

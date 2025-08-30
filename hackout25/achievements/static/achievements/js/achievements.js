@@ -3,11 +3,11 @@
 class AchievementManager {
     constructor() {
         this.apiEndpoints = {
-            progress: '/achievements_dashboard/api/progress/',
-            notifications: '/achievements_dashboard/api/notifications/',
-            markRead: '/achievements_dashboard/api/notifications/read/',
-            track: '/achievements_dashboard/api/track/',
-            leaderboard: '/achievements_dashboard/api/leaderboard/'
+            progress: '/achievements/api/progress/',
+            notifications: '/achievements/api/notifications/',
+            markRead: '/achievements/api/notifications/read/',
+            track: '/achievements/api/track/',
+            leaderboard: '/achievements/api/leaderboard/'
         };
         
         this.notificationQueue = [];
@@ -296,8 +296,8 @@ class AchievementManager {
             }, 150);
             
             // Navigate to achievement detail (if route exists)
-            if (window.location.pathname.includes('/achievements_dashboard/')) {
-                window.location.href = `/achievements_dashboard/achievement/${achievementId}/`;
+            if (window.location.pathname.includes('/achievements/')) {
+                window.location.href = `/achievements/achievement/${achievementId}/`;
             }
         }
     }
@@ -354,7 +354,7 @@ class AchievementManager {
     // Widget methods for embedding in other pages
     static async createProgressWidget(containerId) {
         try {
-            const response = await fetch('/achievements_dashboard/api/progress/');
+            const response = await fetch('/achievements/api/progress/');
             const data = await response.json();
             
             if (data.success) {
@@ -409,7 +409,7 @@ class AchievementManager {
     
     static async createMiniLeaderboard(containerId, type = 'points', limit = 5) {
         try {
-            const response = await fetch(`/achievements_dashboard/api/leaderboard/?type=${type}&limit=${limit}`);
+            const response = await fetch(`/achievements/api/leaderboard/?type=${type}&limit=${limit}`);
             const data = await response.json();
             
             if (data.success) {
@@ -452,7 +452,7 @@ class AchievementManager {
         html += `
                 </div>
                 <div class="leaderboard-footer">
-                    <a href="/achievements_dashboard/leaderboard/" class="view-full-link">View Full Leaderboard →</a>
+                    <a href="/achievements/leaderboard/" class="view-full-link">View Full Leaderboard →</a>
                 </div>
             </div>
         `;

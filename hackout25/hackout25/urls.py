@@ -40,7 +40,7 @@ urlpatterns = [
     path('', include('authentication.urls')),
     path('news/', include('news.urls')),
     path('heatmap/', include('heatmap.urls')),
-    path('achievements_dashboard/', include('achievements.urls')),
+    path('achievements/', include('achievements.urls')),
     path('favicon.ico', favicon_view, name='favicon'),
 ]
 

@@ -3,7 +3,10 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 from heatmap.models import Report
 from dashboard.models import EnvironmentalAnalysis
-from .services import AchievementService
+# Import after Django setup to avoid circular imports
+def get_achievement_service():
+    from .services import AchievementService
+    return AchievementService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,6 +17,7 @@ def create_user_stats(sender, instance, created, **kwargs):
     """Create user stats when a new user is created"""
     if created:
         try:
+            AchievementService = get_achievement_service()
             AchievementService.get_or_create_user_stats(instance)
             logger.info(f"Created user stats for {instance.username}")
         except Exception as e:
