@@ -1,0 +1,269 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}New Environmental Analysis - EcoValidate{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div class="d-flex align-items-center">
+        <a href="{% url 'dashboard' %}" class="btn btn-light me-3">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div>
+            <h1>Environmental Analysis</h1>
+            <p class="text-muted mb-0">Upload an environmental image for AI-powered validation</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="content-card">
+            <h5><i class="fas fa-file-alt me-2"></i>Report Information</h5>
+            
+            <form method="post" enctype="multipart/form-data" id="analysisForm">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">Report Title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
+                        {{ form.location }}
+                        {% if form.location.errors %}
+                            <div class="text-danger small mt-1">{{ form.location.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Provide additional context, observations, or concerns about this environmental report.</small>
+                </div>
+
+                <div class="upload-section mt-4">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-content">
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <h5>Upload Environmental Image</h5>
+                            <p class="text-muted">Drag and drop your image here, or click to browse. Supports JPG, PNG, and other common image formats.</p>
+                            <div class="upload-buttons">
+                                <button type="button" class="btn btn-primary me-3" onclick="document.getElementById('{{ form.image.id_for_label }}').click()">
+                                    <i class="fas fa-upload me-2"></i>Choose File
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary">
+                                    <i class="fas fa-camera me-2"></i>Take Photo
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-3">Maximum file size: 10MB</small>
+                        </div>
+                    </div>
+                    
+                    {{ form.image }}
+                    {% if form.image.errors %}
+                        <div class="text-danger small mt-2">{{ form.image.errors.0 }}</div>
+                    {% endif %}
+                    
+                    <div id="imagePreview" class="image-preview" style="display: none;">
+                        <div class="card">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center">
+                                    <img id="previewImg" src="" alt="Preview" class="me-3 preview-image">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1" id="fileName"></h6>
+                                        <small class="text-muted" id="fileSize"></small>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage()">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                        <i class="fas fa-microscope me-2"></i>Start Analysis
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.upload-section {
+    border: 2px dashed #dee2e6;
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    background-color: #fafbfc;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.upload-section:hover {
+    border-color: var(--primary-color);
+    background-color: #f0f9f7;
+}
+
+.upload-section.dragover {
+    border-color: var(--primary-color);
+    background-color: #e8f5f0;
+}
+
+.upload-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.upload-icon i {
+    color: white;
+    font-size: 2rem;
+}
+
+.upload-buttons .btn {
+    min-width: 120px;
+}
+
+#{{ form.image.id_for_label }} {
+    display: none;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #e1e8ed;
+    padding: 12px 16px;
+    font-size: 14px;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(22, 160, 133, 0.25);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.preview-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+</style>
+
+<script>
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('{{ form.image.id_for_label }}');
+const imagePreview = document.getElementById('imagePreview');
+const previewImg = document.getElementById('previewImg');
+const fileName = document.getElementById('fileName');
+const fileSize = document.getElementById('fileSize');
+const submitBtn = document.getElementById('submitBtn');
+const titleInput = document.getElementById('{{ form.title.id_for_label }}');
+const locationInput = document.getElementById('{{ form.location.id_for_label }}');
+
+// Drag and drop functionality
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFileSelect(files[0]);
+    }
+});
+
+uploadArea.addEventListener('click', () => {
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        handleFileSelect(e.target.files[0]);
+    }
+});
+
+function handleFileSelect(file) {
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            imagePreview.style.display = 'block';
+            uploadArea.style.display = 'none';
+            checkFormValid();
+        };
+        reader.readAsDataURL(file);
+        
+        // Set the file input
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+    } else {
+        alert('Please select a valid image file.');
+    }
+}
+
+function removeImage() {
+    imagePreview.style.display = 'none';
+    uploadArea.style.display = 'block';
+    fileInput.value = '';
+    previewImg.src = '';
+    checkFormValid();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function checkFormValid() {
+    const hasTitle = titleInput.value.trim() !== '';
+    const hasLocation = locationInput.value.trim() !== '';
+    const hasImage = fileInput.files.length > 0;
+    
+    submitBtn.disabled = !(hasTitle && hasLocation && hasImage);
+}
+
+// Check form validity on input
+titleInput.addEventListener('input', checkFormValid);
+locationInput.addEventListener('input', checkFormValid);
+
+// Initial check
+checkFormValid();
+</script>
+{% endblock %}
