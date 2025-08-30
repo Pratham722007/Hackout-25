@@ -1,0 +1,154 @@
+{% extends 'news/base.html' %}
+{% load static %}
+
+{% block title %}Environmental News - EcoValidate{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <h1>Environmental News</h1>
+    <p class="subtitle">Stay updated with the latest environmental news and insights</p>
+</div>
+
+
+
+<!-- Latest News Section -->
+<div class="content-card">
+    <div class="section-header">
+        <i class="fas fa-newspaper section-icon"></i>
+        <h5 class="section-title">Latest Environmental News</h5>
+    </div>
+    <div class="news-grid">
+        {% for art in latest %}
+        <div class="news-card">
+            <div class="news-body">
+                <h3><a href="{{ art.link }}" target="_blank">{{ art.title }}</a></h3>
+                <p>{{ art.description|truncatewords:20 }}</p>
+                <div class="news-meta">
+                    <button class="like-btn" data-id="{{ art.id }}">
+                        <i class="fas fa-thumbs-up"></i>
+                        <span id="like-count-{{ art.id }}">{{ art.likes }}</span>
+                    </button>
+                    <div class="news-actions">
+                        <a href="https://twitter.com/intent/tweet?url={{ art.link|urlencode }}&text={{ art.title|urlencode }}" target="_blank" class="share-btn twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ art.link }}" target="_blank" class="share-btn facebook">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                    </div>
+                    <span class="news-date">{{ art.published|date:"M d, Y" }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Swiper init (keep your existing code)
+  new Swiper('.swiper-container', {
+    loop: true,
+    autoplay: { delay: 5000, disableOnInteraction: false },
+    pagination: { el: '.swiper-pagination', clickable: true },
+    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+    breakpoints: { 640: { slidesPerView: 1 }, 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } },
+  });
+
+  // Like button handler
+  document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const id = this.dataset.id;
+      fetch(`/news/like/${id}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Accept': 'application/json',
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.likes !== undefined) {
+          document.getElementById(`like-count-${id}`).innerText = data.likes;
+        }
+      });
+    });
+  });
+});
+</script>
+
+<script>
+  
+function renderArticles(articles) {
+  const grid = document.querySelector('.news-grid');
+  grid.innerHTML = '';
+  articles.forEach(art => {
+    grid.innerHTML += `
+      <div class="news-card">
+        ${art.image_url ? `<img src="${art.image_url}" alt="${art.title}">` : ''}
+        <div class="news-body">
+          <h3><a href="${art.link}" target="_blank">${art.title}</a></h3>
+          <p>${art.description}</p>
+          <div class="news-meta">
+            <button class="like-btn" data-id="${art.id}">👍 <span id="like-count-${art.id}">${art.likes}</span></button>
+            <a href="https://twitter.com/intent/tweet?url=${encodeURIComponent(art.link)}&text=${encodeURIComponent(art.title)}" target="_blank">Tweet</a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(art.link)}" target="_blank">Share</a>
+            <span class="news-date">${art.published}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  // Re-attach like button handlers
+  document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const id = this.dataset.id;
+      fetch(`/news/like/${id}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Accept': 'application/json',
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.likes !== undefined) {
+          document.getElementById(`like-count-${id}`).innerText = data.likes;
+        }
+      });
+    });
+  });
+}
+
+// Auto-fetch every 30 seconds
+setInterval(() => {
+  fetch('/news/latest-json/')
+    .then(res => res.json())
+    .then(data => renderArticles(data.articles));
+}, 30000); // 30000 ms = 30 seconds
+
+// Optionally, fetch once on page load
+{% comment %} fetch('/news/latest-json/')
+  .then(res => res.json())
+  .then(data => renderArticles(data.articles)); {% endcomment %}
+</script>
+{% endblock %}
