@@ -1,0 +1,28 @@
+🌍 ECOVALIDATE ENVIRONMENTAL ALERT
+
+{{ alert.get_priority_display|upper }}: {{ alert.title }}
+
+Dear {{ user.first_name|default:user.username }},
+
+{{ alert.description }}
+
+{% if alert.location %}
+📍 Location: {{ alert.location }}
+{% endif %}
+
+Alert Details:
+- Priority: {{ alert.get_priority_display }}
+- Sent: {{ alert.created_at|date:"F d, Y \a\t g:i A" }}
+{% if alert.created_by.get_full_name %}
+- Created by: {{ alert.created_by.get_full_name }}
+{% endif %}
+
+This environmental alert was sent to all registered users of the EcoValidate platform to keep you informed about important environmental issues.
+
+Visit the EcoValidate Dashboard: {{ site_url }}
+
+---
+You received this alert because you are registered with EcoValidate.
+This is an automated message from the environmental monitoring system.
+
+EcoValidate - Protecting our planet through AI-powered environmental analysis.

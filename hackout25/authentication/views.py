@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
+from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import UserProfile
@@ -12,6 +13,15 @@ def index(request):
 def redirect_to_dashboard(request):
     """Redirect users to dashboard after successful authentication"""
     return redirect('/dashboard/')
+
+def logout_view(request):
+    """Handle user logout - works for both Clerk and Django auth"""
+    # Clear any Django session data
+    if request.user.is_authenticated:
+        logout(request)
+    
+    # Redirect to home page (where Clerk will handle the logout UI)
+    return redirect('/')
 
 @csrf_exempt
 def clerk_webhook(request):
