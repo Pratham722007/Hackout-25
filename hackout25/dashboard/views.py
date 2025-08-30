@@ -233,10 +233,15 @@ def calculate_confidence(title, location):
 
 def get_coordinates(request):
     """AJAX view to get coordinates for a location"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     if request.method == 'GET':
         location = request.GET.get('location', '').strip()
+        logger.info(f"Coordinate lookup request for location: '{location}'")
         
         if not location:
+            logger.warning("Coordinate lookup request with empty location")
             return JsonResponse({
                 'success': False,
                 'error': 'Location parameter is required'
@@ -244,9 +249,11 @@ def get_coordinates(request):
         
         try:
             # Get coordinates from geocoding service
+            logger.info(f"Calling geocoding service for: {location}")
             result = geocoding_service.get_coordinates(location)
             
             if result:
+                logger.info(f"Geocoding successful for '{location}': {result['latitude']:.6f}, {result['longitude']:.6f}")
                 return JsonResponse({
                     'success': True,
                     'latitude': result['latitude'],
@@ -255,17 +262,20 @@ def get_coordinates(request):
                     'coordinates_text': f"{result['latitude']:.6f}, {result['longitude']:.6f}"
                 })
             else:
+                logger.warning(f"No coordinates found for location: '{location}'")
                 return JsonResponse({
                     'success': False,
                     'error': 'Location not found. Please check the spelling or try a more specific location.'
                 })
                 
         except Exception as e:
+            logger.error(f"Error in coordinate lookup for '{location}': {str(e)}")
             return JsonResponse({
                 'success': False,
                 'error': f'Error retrieving coordinates: {str(e)}'
             })
     
+    logger.warning(f"Invalid request method for coordinate lookup: {request.method}")
     return JsonResponse({
         'success': False,
         'error': 'Invalid request method'

@@ -324,9 +324,16 @@ getCoordinatesBtn.addEventListener('click', function() {
     showLoading();
     
     // Make AJAX request to get coordinates
-    fetch(`/api/coordinates/?location=${encodeURIComponent(location)}`)
-        .then(response => response.json())
+    fetch(`/dashboard/api/coordinates/?location=${encodeURIComponent(location)}`)
+        .then(response => {
+            console.log('API Response Status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('API Response Data:', data);
             hideLoading();
             
             if (data.success) {
@@ -347,8 +354,14 @@ getCoordinatesBtn.addEventListener('click', function() {
         })
         .catch(error => {
             hideLoading();
-            console.error('Error:', error);
-            showError('Network error. Please check your connection and try again.');
+            console.error('Coordinate lookup error:', error);
+            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                showError('Network connection failed. Please check your internet connection.');
+            } else if (error.message.includes('HTTP error')) {
+                showError(`Server error: ${error.message}. Please try again later.`);
+            } else {
+                showError('Unable to retrieve coordinates. Please try again.');
+            }
         });
 });
 
