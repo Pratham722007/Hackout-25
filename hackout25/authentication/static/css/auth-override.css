@@ -1,0 +1,510 @@
+/* COMPREHENSIVE CLERK OVERRIDE - HIGHEST PRIORITY STYLING */
+
+/* Reset Bootstrap and other conflicting styles */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #d1fae5 100%) !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
+}
+
+/* Container for our custom components */
+.auth-container {
+    min-height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px !important;
+    position: relative !important;
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.15), 0 0 0 1px rgba(16, 185, 129, 0.05) !important;
+    padding: 40px !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    position: relative !important;
+    z-index: 10 !important;
+    border: 1px solid rgba(16, 185, 129, 0.1) !important;
+    animation: slideUp 0.6s ease-out !important;
+}
+
+.auth-header {
+    text-align: center !important;
+    margin-bottom: 32px !important;
+}
+
+.logo {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    margin-bottom: 16px !important;
+}
+
+.logo-icon {
+    width: 48px !important;
+    height: 48px !important;
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+    border-radius: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    color: white !important;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3) !important;
+}
+
+.logo h1 {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    letter-spacing: -0.02em !important;
+    margin: 0 !important;
+}
+
+.auth-subtitle {
+    color: #6b7280 !important;
+    font-size: 16px !important;
+    font-weight: 400 !important;
+    line-height: 1.5 !important;
+    margin: 0 !important;
+}
+
+.auth-content {
+    margin-bottom: 24px !important;
+}
+
+.loading {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 40px !important;
+    color: #10b981 !important;
+    font-size: 16px !important;
+}
+
+.auth-footer {
+    text-align: center !important;
+    margin-top: 32px !important;
+    padding-top: 24px !important;
+    border-top: 1px solid rgba(16, 185, 129, 0.1) !important;
+}
+
+.auth-footer p {
+    color: #9ca3af !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    margin: 0 !important;
+}
+
+/* Background decorations */
+.bg-decoration {
+    position: absolute !important;
+    inset: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+}
+
+.circle {
+    position: absolute !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(52, 211, 153, 0.05) 100%) !important;
+    animation: float 6s ease-in-out infinite !important;
+}
+
+.circle-1 {
+    width: 300px !important;
+    height: 300px !important;
+    top: -150px !important;
+    right: -150px !important;
+    animation-delay: 0s !important;
+}
+
+.circle-2 {
+    width: 200px !important;
+    height: 200px !important;
+    bottom: -100px !important;
+    left: -100px !important;
+    animation-delay: 2s !important;
+}
+
+.circle-3 {
+    width: 150px !important;
+    height: 150px !important;
+    top: 50% !important;
+    right: -75px !important;
+    animation-delay: 4s !important;
+}
+
+/* Animations */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0%, 100% { 
+        transform: translateY(0px) rotate(0deg); 
+    }
+    50% { 
+        transform: translateY(-20px) rotate(180deg); 
+    }
+}
+
+@keyframes spin {
+    0% { 
+        transform: rotate(0deg); 
+    }
+    100% { 
+        transform: rotate(360deg); 
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .auth-card {
+        padding: 32px 24px;
+        margin: 16px;
+        border-radius: 20px;
+    }
+    
+    .logo h1 {
+        font-size: 24px;
+    }
+    
+    .logo-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+        border-radius: 12px;
+    }
+    
+    .circle-1 {
+        width: 200px;
+        height: 200px;
+        top: -100px;
+        right: -100px;
+    }
+    
+    .circle-2 {
+        width: 150px;
+        height: 150px;
+        bottom: -75px;
+        left: -75px;
+    }
+    
+    .circle-3 {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 24px 20px;
+    }
+    
+    .auth-header {
+        margin-bottom: 24px;
+    }
+    
+    .logo {
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    
+    .logo h1 {
+        font-size: 22px;
+    }
+    
+    .logo-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 12px;
+    }
+}
+
+/* ========================================= */
+/* CLERK COMPONENT OVERRIDES - ULTRA HIGH PRIORITY */
+/* ========================================= */
+
+/* Root container reset */
+#root .cl-rootBox,
+#root .cl-rootBox *,
+body .cl-rootBox,
+body .cl-rootBox * {
+    box-sizing: border-box !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Main Clerk card - completely remove default styling */
+#root .cl-card,
+body .cl-card,
+div .cl-card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+}
+
+/* Header styling */
+#root .cl-headerTitle,
+body .cl-headerTitle,
+div .cl-headerTitle {
+    display: none !important; /* Hide default title, we use our own */
+}
+
+#root .cl-headerSubtitle,
+body .cl-headerSubtitle,
+div .cl-headerSubtitle {
+    display: none !important; /* Hide default subtitle */
+}
+
+/* Form field containers */
+#root .cl-field,
+body .cl-field,
+div .cl-field {
+    margin-bottom: 20px !important;
+}
+
+/* Form field labels */
+#root .cl-formFieldLabel,
+body .cl-formFieldLabel,
+div .cl-formFieldLabel {
+    color: #374151 !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+    display: block !important;
+    text-align: left !important;
+}
+
+/* Input fields - COMPLETE OVERRIDE */
+#root .cl-formFieldInput,
+body .cl-formFieldInput,
+div .cl-formFieldInput,
+input.cl-formFieldInput {
+    background: #f8fafc !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    padding: 14px 16px !important;
+    font-size: 16px !important;
+    font-family: 'Inter', sans-serif !important;
+    color: #374151 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 48px !important;
+    line-height: 1.5 !important;
+    transition: all 0.2s ease !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+}
+
+/* Input focus state */
+#root .cl-formFieldInput:focus,
+body .cl-formFieldInput:focus,
+div .cl-formFieldInput:focus,
+input.cl-formFieldInput:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+    background: #ffffff !important;
+    outline: none !important;
+}
+
+/* Primary button - COMPLETE OVERRIDE */
+#root .cl-formButtonPrimary,
+body .cl-formButtonPrimary,
+div .cl-formButtonPrimary,
+button.cl-formButtonPrimary {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 14px 24px !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    font-family: 'Inter', sans-serif !important;
+    color: white !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 48px !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    line-height: 1.5 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    outline: none !important;
+}
+
+/* Primary button hover */
+#root .cl-formButtonPrimary:hover,
+body .cl-formButtonPrimary:hover,
+div .cl-formButtonPrimary:hover,
+button.cl-formButtonPrimary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4) !important;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+}
+
+/* Social buttons */
+#root .cl-socialButtonsBlockButton,
+body .cl-socialButtonsBlockButton,
+div .cl-socialButtonsBlockButton {
+    border: 2px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    color: #374151 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    padding: 12px 16px !important;
+    margin: 6px 0 !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+}
+
+/* Social buttons hover */
+#root .cl-socialButtonsBlockButton:hover,
+body .cl-socialButtonsBlockButton:hover,
+div .cl-socialButtonsBlockButton:hover {
+    border-color: #10b981 !important;
+    background: #f0fdf4 !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Divider */
+#root .cl-dividerLine,
+body .cl-dividerLine,
+div .cl-dividerLine {
+    background: rgba(16, 185, 129, 0.2) !important;
+    height: 1px !important;
+    border: none !important;
+    margin: 20px 0 !important;
+}
+
+#root .cl-dividerText,
+body .cl-dividerText,
+div .cl-dividerText {
+    color: #6b7280 !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    font-size: 14px !important;
+    font-family: 'Inter', sans-serif !important;
+    padding: 0 16px !important;
+    text-transform: lowercase !important;
+}
+
+/* Footer links */
+#root .cl-footerActionLink,
+body .cl-footerActionLink,
+div .cl-footerActionLink,
+a.cl-footerActionLink {
+    color: #10b981 !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    transition: color 0.2s ease !important;
+}
+
+#root .cl-footerActionLink:hover,
+body .cl-footerActionLink:hover,
+div .cl-footerActionLink:hover,
+a.cl-footerActionLink:hover {
+    color: #059669 !important;
+    text-decoration: underline !important;
+}
+
+/* Password show/hide button */
+#root .cl-formFieldInputShowPasswordButton,
+body .cl-formFieldInputShowPasswordButton,
+div .cl-formFieldInputShowPasswordButton {
+    color: #10b981 !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+}
+
+/* Loading spinner */
+#root .cl-spinner,
+body .cl-spinner,
+div .cl-spinner {
+    border-color: #10b981 !important;
+    border-top-color: transparent !important;
+}
+
+/* Error messages */
+#root .cl-formFieldErrorText,
+body .cl-formFieldErrorText,
+div .cl-formFieldErrorText {
+    color: #dc2626 !important;
+    font-size: 12px !important;
+    font-family: 'Inter', sans-serif !important;
+    margin-top: 4px !important;
+}
+
+/* Success messages */
+#root .cl-formFieldSuccessText,
+body .cl-formFieldSuccessText,
+div .cl-formFieldSuccessText {
+    color: #10b981 !important;
+    font-size: 12px !important;
+    font-family: 'Inter', sans-serif !important;
+    margin-top: 4px !important;
+}
+
+/* Remove any unwanted borders, shadows, or backgrounds from all Clerk components */
+#root [class*="cl-"],
+body [class*="cl-"],
+div [class*="cl-"] {
+    box-sizing: border-box !important;
+}
+
+/* Ensure no interference from external styles */
+#root .cl-internal-*,
+body .cl-internal-*,
+div .cl-internal-* {
+    all: unset !important;
+}
+
+/* Social button icons */
+#root .cl-socialButtonsBlockButton svg,
+body .cl-socialButtonsBlockButton svg,
+div .cl-socialButtonsBlockButton svg {
+    width: 20px !important;
+    height: 20px !important;
+    margin-right: 8px !important;
+}
