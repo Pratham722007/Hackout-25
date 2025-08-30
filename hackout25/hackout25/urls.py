@@ -22,9 +22,14 @@ from django.shortcuts import render
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+<<<<<<< Updated upstream
     path("dashboard/", include("dashboard.urls")),
     path('news/', include('news.urls')),
     path('', include('authentication.urls')),
+=======
+    path('', include('dashboard.urls')),
+    path('news/', include('news.urls')),
+>>>>>>> Stashed changes
 ]
 
 # Serve static files during development
