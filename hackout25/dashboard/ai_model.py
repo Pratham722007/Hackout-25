@@ -23,45 +23,32 @@ class EnvironmentalAnalyzer:
         # Load pre-trained MobileNetV2 model
         self.model = MobileNetV2(weights='imagenet', include_top=True)
         
-        # Environmental keywords from ImageNet classes (expanded for better detection)
+        # Environmental keywords from ImageNet classes
         self.environmental_classes = {
-            # Nature and Wildlife - Animals
+            # Nature and Wildlife
             'beaver', 'otter', 'zebra', 'elephant', 'lion', 'tiger', 'bear', 'panda',
-            'eagle', 'hawk', 'owl', 'pelican', 'flamingo', 'ostrich', 'peacock', 'robin',
-            'turtle', 'frog', 'snake', 'lizard', 'crocodile', 'alligator', 'iguana',
-            'fish', 'shark', 'whale', 'dolphin', 'seal', 'octopus', 'stingray',
-            'butterfly', 'bee', 'spider', 'dragonfly', 'ladybug', 'cricket', 'ant',
-            'deer', 'elk', 'moose', 'fox', 'wolf', 'raccoon', 'squirrel', 'rabbit',
-            'monkey', 'gorilla', 'chimpanzee', 'orangutan', 'lemur', 'sloth',
+            'eagle', 'hawk', 'owl', 'pelican', 'flamingo', 'ostrich', 'peacock',
+            'turtle', 'frog', 'snake', 'lizard', 'crocodile', 'alligator',
+            'fish', 'shark', 'whale', 'dolphin', 'seal', 'octopus',
+            'butterfly', 'bee', 'spider', 'dragonfly', 'ladybug',
             
-            # Plants and Trees - Vegetation
-            'tree', 'oak', 'pine', 'palm', 'maple', 'willow', 'birch', 'cedar',
-            'flower', 'rose', 'tulip', 'sunflower', 'daisy', 'orchid', 'lily',
-            'mushroom', 'coral', 'seaweed', 'moss', 'fern', 'grass', 'leaf',
-            'cactus', 'bamboo', 'vine', 'algae', 'lichen', 'herb', 'shrub',
-            'dandelion', 'clover', 'ivy', 'thistle', 'weed',
+            # Plants and Trees
+            'tree', 'oak', 'pine', 'palm', 'maple', 'willow', 'birch',
+            'flower', 'rose', 'tulip', 'sunflower', 'daisy', 'orchid',
+            'mushroom', 'coral', 'seaweed', 'moss', 'fern',
             
             # Landscapes and Natural Features
-            'mountain', 'volcano', 'geyser', 'glacier', 'iceberg', 'cliff', 'rock',
-            'beach', 'lakeside', 'seashore', 'sandbar', 'promontory', 'coast',
-            'forest', 'rainforest', 'jungle', 'desert', 'canyon', 'valley', 'hill',
-            'river', 'stream', 'waterfall', 'lake', 'pond', 'ocean', 'sea',
-            'island', 'peninsula', 'reef', 'atoll', 'shore', 'bay', 'inlet',
-            'cave', 'gorge', 'plateau', 'meadow', 'plain', 'tundra', 'swamp',
-            'wetland', 'marsh', 'lagoon', 'spring', 'well', 'crater',
+            'mountain', 'volcano', 'geyser', 'glacier', 'iceberg', 'cliff',
+            'beach', 'lakeside', 'seashore', 'sandbar', 'promontory',
+            'forest', 'rainforest', 'jungle', 'desert', 'canyon', 'valley',
+            'river', 'stream', 'waterfall', 'lake', 'pond', 'ocean',
+            'island', 'peninsula', 'reef', 'atoll',
             
-            # Weather and Sky Phenomena
-            'thunderstorm', 'rainbow', 'aurora', 'sunset', 'sunrise', 'cloud',
-            'lightning', 'snow', 'ice', 'frost', 'mist', 'fog', 'rain',
-            'tornado', 'hurricane', 'cyclone', 'typhoon', 'gale',
-            
-            # Natural Materials and Elements
-            'sand', 'soil', 'earth', 'stone', 'pebble', 'boulder', 'mineral',
-            'crystal', 'shell', 'driftwood', 'log', 'branch', 'twig',
+            # Weather and Sky
+            'thunderstorm', 'rainbow', 'aurora', 'sunset', 'sunrise',
             
             # Environmental Threats
             'wildfire', 'forest_fire', 'pollution', 'oil_spill', 'smog',
-            'erosion', 'landslide', 'avalanche', 'mudslide', 'sinkhole',
         }
         
         # Critical environmental threat indicators
@@ -164,35 +151,22 @@ class EnvironmentalAnalyzer:
     def _calculate_environmental_score(self, predictions, color_analysis):
         """Calculate how environmental the image is"""
         env_score = 0.0
-        env_matches = 0
         
-        # Check predictions against environmental classes with improved weighting
+        # Check predictions against environmental classes
         for class_name, confidence in predictions:
             class_lower = class_name.lower()
             for env_class in self.environmental_classes:
                 if env_class in class_lower or class_lower in env_class:
-                    # Weight earlier predictions (higher confidence) more heavily
-                    position_weight = 1.0 - (0.1 * predictions.index((class_name, confidence)))
-                    env_score += confidence * position_weight
-                    env_matches += 1
+                    env_score += confidence
                     break
         
-        # Apply logarithmic scaling for multiple matches to prevent low scores
-        if env_matches > 1:
-            env_score = env_score * (1 + 0.1 * min(5, env_matches))
-        
-        # Enhanced boost based on color analysis
+        # Boost score based on color analysis
         if color_analysis['green_dominance'] > 0.3:  # High vegetation
-            env_score += 0.25
-        if color_analysis['blue_dominance'] > 0.25:  # Water/sky present
             env_score += 0.2
-        if color_analysis['brown_score'] > 0.1:  # Earth tones
+        if color_analysis['blue_dominance'] > 0.25:  # Water/sky present
             env_score += 0.15
-            
-        # Ensure minimum environmental score for images with strong color indicators
-        if (color_analysis['green_dominance'] > 0.4 and color_analysis['blue_dominance'] > 0.3) or \
-           (color_analysis['green_dominance'] > 0.5):
-            env_score = max(env_score, 0.4)  # Set minimum environmental score for strong natural colors
+        if color_analysis['brown_score'] > 0.1:  # Earth tones
+            env_score += 0.1
             
         return min(env_score, 1.0)
 
@@ -204,7 +178,7 @@ class EnvironmentalAnalyzer:
             return {
                 'is_environmental': False,
                 'risk_level': 'low',
-                'confidence': max(30, int((1 - env_score) * 100)),  # Ensure minimum confidence of 30%
+                'confidence': int((1 - env_score) * 100),
                 'analysis': 'Non-environmental content detected',
                 'detected_objects': [pred[0] for pred in predictions[:3]]
             }
@@ -216,35 +190,29 @@ class EnvironmentalAnalyzer:
         for class_name, confidence in predictions:
             class_lower = class_name.lower()
             
-            # Check for critical threats with increased weight
+            # Check for critical threats
             for critical in self.critical_indicators:
                 if critical in class_lower or any(word in class_lower for word in critical.split('_')):
-                    critical_score += confidence * 2.0  # Double the weight for critical indicators
+                    critical_score += confidence
             
-            # Check for high-risk indicators with increased weight
+            # Check for high-risk indicators
             for high_risk in self.high_risk_indicators:
                 if high_risk in class_lower or any(word in class_lower for word in high_risk.split('_')):
-                    high_risk_score += confidence * 1.5  # 1.5x weight for high risk indicators
+                    high_risk_score += confidence
         
-        # Determine final risk level with improved thresholds
-        if critical_score > 0.2 or (env_score > 0.6 and ('fire' in str(predictions).lower() or 'smoke' in str(predictions).lower())):
+        # Determine final risk level
+        if critical_score > 0.3 or (env_score > 0.7 and 'fire' in str(predictions).lower()):
             risk_level = 'critical'
-            # Improved confidence calculation that ensures minimum confidence value
-            confidence = max(60, int(min(95, (critical_score + env_score) * 100)))
+            confidence = int(min(90, (critical_score + env_score) * 100))
             analysis = 'Critical environmental threat detected'
-        elif high_risk_score > 0.15 or (env_score > 0.4 and critical_score > 0.05):
+        elif high_risk_score > 0.2 or (env_score > 0.5 and critical_score > 0.1):
             risk_level = 'high'
-            confidence = max(50, int(min(90, (high_risk_score + env_score) * 90)))
+            confidence = int(min(85, (high_risk_score + env_score) * 80))
             analysis = 'High environmental risk detected'
         else:
-            # Even for low risk, ensure reasonable confidence
             risk_level = 'low'
-            confidence = max(40, int(min(95, env_score * 100)))
+            confidence = int(min(95, env_score * 100))
             analysis = 'Environmental content with low risk'
-        
-        # Apply color analysis boost to confidence
-        if color_analysis['green_dominance'] > 0.4 or color_analysis['blue_dominance'] > 0.35:
-            confidence = min(confidence + 15, 100)  # Boost confidence for clear environmental indicators
         
         return {
             'is_environmental': True,
@@ -261,7 +229,7 @@ class EnvironmentalAnalyzer:
         return {
             'is_environmental': False,
             'risk_level': 'low',
-            'confidence': 50,  # Default to 50% confidence instead of 0
+            'confidence': 0,
             'analysis': message,
             'detected_objects': []
         }
