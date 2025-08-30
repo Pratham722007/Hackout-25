@@ -49,6 +49,10 @@ def new_analysis_view(request):
         if form.is_valid():
             analysis = form.save(commit=False)
             
+            # Set the user who created this analysis
+            if request.user.is_authenticated:
+                analysis.created_by = request.user
+            
             # Get coordinates from POST data if available
             latitude = request.POST.get('latitude')
             longitude = request.POST.get('longitude')

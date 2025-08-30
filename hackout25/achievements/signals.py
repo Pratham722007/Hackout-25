@@ -2,6 +2,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from heatmap.models import Report
+from dashboard.models import EnvironmentalAnalysis
 from .services import AchievementService
 import logging
 
@@ -46,3 +47,28 @@ def track_report_validation(sender, instance, created, **kwargs):
             pass
         except Exception as e:
             logger.error(f"Error tracking report validation: {e}")
+
+
+@receiver(post_save, sender=EnvironmentalAnalysis)
+def track_analysis_creation(sender, instance, created, **kwargs):
+    """Track achievement progress when an environmental analysis is created"""
+    if created and hasattr(instance, 'created_by') and instance.created_by:
+        try:
+            AchievementService.track_analysis_created(instance.created_by, instance)
+            logger.info(f"Tracked analysis creation for {instance.created_by.username}")
+        except Exception as e:
+            logger.error(f"Error tracking analysis creation: {e}")
+
+
+@receiver(post_save, sender=EnvironmentalAnalysis)
+def track_analysis_validation(sender, instance, created, **kwargs):
+    """Track achievement progress when an environmental analysis is validated"""
+    if not created and instance.status == 'completed':
+        # Check if status was just changed to completed (validated)
+        try:
+            # For analysis validation, we can track when status changes to completed
+            if hasattr(instance, 'validated_by') and instance.validated_by:
+                AchievementService.track_analysis_validated(instance.validated_by, instance)
+                logger.info(f"Tracked analysis validation for {instance.validated_by.username}")
+        except Exception as e:
+            logger.error(f"Error tracking analysis validation: {e}")
