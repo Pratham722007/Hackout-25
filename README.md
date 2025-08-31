@@ -3,16 +3,17 @@
 
 **AI-Powered Environmental Validation & Monitoring**
 
-EcoValidate is a community-driven platform that combines geotagged field reports with satellite imagery to monitor and protect ecosystems.  
-Users can submit observations via a web form or SMS, and the system uses computer vision + AI/ML to validate them.  
+The Community Mangrove Watch website delivers an intuitive platform focused on environmental monitoring,enabling users to contribute data and access real-time mangrove conservation insights efficiently.
 
 ---
 
 ## ✨ Key Features
-- 📊 **Interactive Dashboard** – Track environmental reports & risk heatmaps.  
-- 📱 **SMS Reporting & Alerts** – Community members received report issues via SMS.  
+- 📊 **Interactive Dashboard** – Track environmental reports & risk heatmaps.
+- 🤖 **Al Validation** - An Al-powered system validates reports of mangrove damage, assigns a confidence score, and categorizes incidents as low, high, or critical to help prioritize issue resolution.
+- 📱 **SMS Reporting & Alerts** – Community members received report issues via Gmail.  
 - ✅ **Report Status & Confidence** – Each submission has a confidence score.   
-- 🏅 **Gamification** – Badges, points & leaderboards encourage participation.  
+- 🏅 **Gamification** – Badges, points & leaderboards encourage participation.
+- 📍 **Map Visualisation** - Customizable map for real-time global mangrove monitoring, enhancing data.
 
 ---
 
@@ -25,10 +26,9 @@ Users can submit observations via a web form or SMS, and the system uses compute
 
 ## 🛠️ Tech Stack
 - 🐍 **Backend:** Python (Django)  
-- ⚛️ **Frontend:** React ,Html,CSS
-- 🌐 **Data Sources:** NASA Earthdata, Sentinel APIs  
-- 📡 **SMS Integration:** Twilio  
-- 🗄️ **Database:** PostgreSQL / PostGIS  
+- ⚛️ **Frontend:** React ,Html,CSS  
+- 🗄️ **Database:** PostgreSQL / PostGIS
+- 🤖 **AI Model:** MobileNetV2
 
 ---
 
