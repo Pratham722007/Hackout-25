@@ -1,1 +1,13 @@
 .env
+ADMIN_FIX.md
+AI_MODEL_FIXES.md
+create_diverse_datasets.py
+diagnose_confidence.py
+EMAIL_TESTING_GUIDE.md
+ML_CONFIDENCE_FIXES.md
+news.zip
+performance_warmup.py
+REPORTS_SYSTEM_IMPLEMENTATION.md
+SOLUTION_SUMMARY.md
+test_*.py
+verify_*.py

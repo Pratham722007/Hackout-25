@@ -350,7 +350,7 @@
                     <i class="fas fa-leaf"></i>
                 </div>
                 <div class="logo-text">
-                    <h4>EcoValidate</h4>
+                    <h4>MangroSafe</h4>
                     <small>AI Environmental Analysis</small>
                 </div>
             </a>
@@ -359,45 +359,57 @@
         <div class="nav-section">
             <h6>Navigation</h6>
             <div class="nav-item">
-                <a href="{% url 'dashboard' %}" class="nav-link">
+                <a href="{% url 'dashboard' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <i class="fas fa-chart-line"></i>
                     Dashboard
                 </a>
             </div>
             <div class="nav-item">
-                <a href="{% url 'new_analysis' %}" class="nav-link">
+                <a href="{% url 'new_analysis' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'new_analysis' %}active{% endif %}">
                     <i class="fas fa-plus"></i>
-                    New Validation
+                    New Report
                 </a>
             </div>
             <div class="nav-item">
-                <a href="{% url 'reports' %}" class="nav-link">
+                <a href="{% url 'reports' %}" class="nav-link {% if request.resolver_match.url_name == 'reports' or request.resolver_match.url_name == 'report_detail' %}active{% endif %}">
                     <i class="fas fa-file-alt"></i>
                     Reports
                 </a>
             </div>
             <div class="nav-item">
-                <a href="{% url 'news_home' %}" class="nav-link active">
-                    <i class="fas fa-newspaper"></i>
-                    News
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="{% url 'heatmap' %}" class="nav-link">
+                <a href="{% url 'heatmap' %}" class="nav-link {% if request.resolver_match.url_name == 'heatmap' %}active{% endif %}">
                     <i class="fas fa-map"></i>
-                    HeatMap
+                    Map
                 </a>
             </div>
             <div class="nav-item">
-                <a href="{% url 'achievements_dashboard' %}" class="nav-link">
+                <a href="{% url 'achievements_dashboard' %}" class="nav-link {% if 'achievements_dashboard' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-trophy"></i>
                     Achievements
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'news_home' %}" class="nav-link {% if request.resolver_match.url_name == 'news_home' %}active{% endif %}">
+                    <i class="fas fa-newspaper"></i>
+                    News
                 </a>
             </div>
             <div class="nav-item">
                 <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#alertModal">
                     <i class="fas fa-bell"></i>
                     Alert
+                </a>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <h6>Account</h6>
+            <div class="nav-item">
+                <a href="https://thorough-crab-50.clerk.accounts.dev/v1/auth/sign-out" class="nav-link" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
                 </a>
             </div>
         </div>
@@ -424,15 +436,18 @@
             </div>
         </div>
 
+        <div class="nav-section">
+            <h6>Account</h6>
+            <div class="nav-item">
+                <a href="#" class="nav-link" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+
         <div style="position: absolute; bottom: 20px; left: 20px; right: 20px;">
             <div style="display: flex; align-items: center;">
-                <div style="width: 40px; height: 40px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-                    <span style="color: white; font-weight: bold;">E</span>
-                </div>
-                <div>
-                    <div style="font-weight: 600; color: #2c3e50;">Environmental AI</div>
-                    <small style="color: #7f8c8d;">Protecting our planet</small>
-                </div>
             </div>
         </div>
     </div>
